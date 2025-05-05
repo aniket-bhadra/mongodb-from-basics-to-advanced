@@ -127,4 +127,223 @@ Same as GUI tools, CLI tools like `psql`, `mysql`, and `mongosh` can connect to:
 - **MySQL/PostgreSQL on cloud + Workbench/pgAdmin** = more manual setup, but fully supported
 
 
-mongodb objects are essentially json objects, where schema is optional
+#### ✅ **MySQL CLI:**
+
+* ✔ Yes, `mysql.exe` is the CLI.
+* ✔ You can:
+
+  * Run it manually via full path: `C:\path\to\mysql.exe`.
+  * Or add MySQL's `bin` folder to the system PATH → then run `mysql` from any terminal.
+
+---
+
+#### ✅ **PostgreSQL (psql):**
+
+* ✔ Yes, `psql.exe` is the CLI.
+* ✔ The **PostgreSQL Shell** (SQL Shell) is just a shortcut to run `psql.exe`.
+* ✔ You can:
+
+  * Use the SQL Shell (a shortcut that runs the CLI).
+  * Or add PostgreSQL's `bin` folder to the PATH → then run `psql` from terminal.
+  * Or run the full path to `psql.exe` manually.
+
+---
+
+#### ✅ **MongoDB CLI (`mongosh`):**
+
+* ✔ Unlike MySQL and PostgreSQL, you install `mongosh` separately.
+* ✔ The `mongosh` CLI installer (recent versions) **automatically adds `mongosh` to your PATH**.
+* ✔ So you can simply run `mongosh` from a normal terminal and the MongoDB CLI will activate.
+
+---
+
+mysql,postgresql, .sql file excuted by gui,cli then that goes to server, here directly running comand either cli or inteact with server with gui,no extra file creation
+
+### 🔗 Connect to MongoDB:
+
+**Local server:**
+
+```bash
+mongosh
+```
+
+**Remote server:**
+
+```bash
+mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
+```
+
+### ✅ **MySQL/PostgreSQL (local):**
+
+* **Default user:** `root` (MySQL), `postgres` (PostgreSQL).
+* You are prompted to set a password during installation.
+* You can also create other users with specific privileges.
+
+### ❌ **MongoDB (local):**
+
+* **No default user or auth by default.**
+* When installed locally, **authentication is disabled**, so **anyone can access all databases**.
+
+### To enable authentication in local MongoDB:
+
+1. Create an admin user:
+
+   ```js
+   use admin
+   db.createUser({
+     user: "admin",
+     pwd: "password",
+     roles: ["userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase"]
+   })
+   ```
+   user roles are predefined built-in roles in MongoDB. You simply assign them by name in the roles array.
+
+2. Then start MongoDB with auth:
+
+   ```
+   mongod --auth
+   ```
+Yes, your summary is **correct and well-structured**. Just a minor tweak for full clarity:
+
+---
+
+### ✅ **Connection strings based on MongoDB local setup**
+
+1. **If authentication is enabled, and user is created in the `admin` DB**:
+
+```js
+mongoose.connect('mongodb://admin:password@127.0.0.1:27017/dbname?authSource=admin');
+```
+
+2. **If authentication is enabled, and user is created in the same `dbname`**:
+
+```js
+mongoose.connect('mongodb://username:password@127.0.0.1:27017/dbname');
+```
+
+3. **If authentication is disabled (default MongoDB install):**
+
+```js
+mongoose.connect('mongodb://127.0.0.1:27017/dbname');
+```
+
+---
+connect to local server with authentication enabled through CLI
+```bash
+mongosh "mongodb://admin:password@127.0.0.1:27017/dbname?authSource=admin"
+```
+connect to local server with authentication enabled through Compass
+
+Hostname: 127.0.0.1
+Port: 27017
+
+Authentication:
+
+Select "Username / Password"
+Username: admin
+Password: your password
+Authentication Database: admin ✅ (very important!)
+
+Then click "Connect".
+
+
+
+---
+### show databases
+show dbs
+
+show collection
+
+### create database & use it
+use school
+
+until collection is created no db going to be created
+
+### create collection
+db.createCollection("employees")
+
+### delete collection
+db.collectionName.drop()
+
+### delete db
+db.dropDatabase()
+
+### insert data
+if students collection exist it will add data there, if not then it will create and add data
+
+db.students.insertOne({name: "Raju", age:25})
+
+db.students.insertMany([
+  {name: "sara", age:25}
+  {name: "subir", age:45}
+  {name: "pravin", age:55}
+  {name: "basu", age:25}
+])
+
+### read data
+db.students.find()
+
+db.cars.findOne({model:'Creta'})
+the methods you use in MongoDB shell (like find(), insertMany(), findOne()) are similar to those in Mongoose, but Mongoose adds additional features like schema validation, middleware, and more.
+
+db.cars.find({},{model:1})
+this--{} match all the documents
+then {model:1} means only model field selected, 1-> means true
+
+_id is always shown by default, if we dont want-
+db.cars.find({},{model:1,_id:0})
+
+filter documents
+db.cars.find({fuel_type:"Petrol"})
+
+filter documents based on a field which is array of strings
+db.cars.find({features:"Sunroof"})
+
+filter documents based on nested object field
+db.cars.find({"engine.type":"Turbocharged"})
+
+### update data
+```shell
+db.cars.updateOne(
+  {model:"Nexon"},
+  {$set:{color:"Red"}}
+)
+```
+It will only update the first document with model: "City", and if color field is not there even in that case it will add & put 'Red'
+
+add a value on array filed
+```shell
+db.cars.updateOne( { model:"City", }, { $push:{ features:"Heated seats" }} )
+```
+delete a value on array field
+```shell
+db.cars.updateOne( { model:"City", }, { $pull:{ features:"Heated seats" }} )
+```
+
+```shell
+db.cars.updateMany( { fuel_type: "Diesel" }, { $set: { alloys: "yes" } } )
+```
+update all documents matching this fuel_type
+
+updating multiple values in array
+ db.cars.updateOne( { model:"City" }, { $push:{ features:{ $each:["wireless charging", "voice control"]}}})
+
+ remove any field
+ db.cars.updateOne( { model: "City" }, { $unset: { color: "" } })
+
+add field to all documents
+db.cars.updateMany( { }, { $set: { color: "Blue" } })
+
+### upsert
+while updating if document not found it will create new document
+db.cars.updateMany( { model: "Venue" }, { $set: { maker: "Hyndui" } },{upsert:true})
+
+### delete
+ db.cars.deleteOne({ fuel_type: "Petrol" })
+ delete 1st matched document
+
+  db.cars.deleteMany({ fuel_type: "Petrol" })
+delete all matched document
+
+
+### data types
