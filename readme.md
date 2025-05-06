@@ -489,3 +489,293 @@ find().limit(2)
 Skip
 find().skip(3)
 
+### Aggregate Framework
+  Most commonly used stages in MongoDB aggregation:
+
+$match $count $group $project $sort $limit $skip $unwind $lookup $addFields  
+
+$group
+find no of cars of each brand
+db.cars.aggregate([
+   {
+      $group:{
+         _id:"$maker",
+         totalCars: {$sum:1}
+      }
+   }
+])
+
+other things we can do after groupping-
+db.collection.aggregate([
+
+  {
+    $group: {
+            _id: "$category",
+            totalAmount: { $sum: "$amount" },
+            averageAmount: { $avg: "$amount" },
+            minAmount: { $min: "$amount" },
+            maxAmount: { $max: "$amount" },
+           amountsList: { $push: "$amount" },
+           uniqueAmounts: { $addToSet: "$amount" }
+    }
+  }
+])
+
+$match
+Hyundai cars having engine of more than 1200cc
+
+
+db.cars.aggregate(
+
+               [{$match:
+
+                       {maker:"Hyundai",
+
+                        "engine.cc":{$gt:1000}
+
+                 }}])
+
+we can achve this with find, but the problem with find is , with find we can use multple stages we  can use multple conditon but not multiple stages that is $match is used here,ex- if have to match with something and then need to group that is in such cases aggrete framework is used instead of find, beucase in find we can give multple conditn after that we can group or use other aggre things,so if only matching with cndtion then find can be used but if after matching we need to perfrom some more advanced opertion, in thse cases aggrete should be used  
+
+$count
+
+count hyundai all cars
+db.cars.aggregate(
+  [
+    {$match:{
+      maker:"Hyundai"
+   }},
+   {
+      $count:"totalCars"
+   }
+])
+
+
+count no of diesel & petrol cars of hyundai
+db.cars.aggregate(
+[
+   {
+      $match:{maker:"Hyundai"}
+   },
+   {
+      $group:{
+         _id:"$fuel_type",
+         totalCars:{$sum:1},
+      }
+   }
+]
+)
+see thing can not be achved with find, that is why for this kind of opertion aggrete shold used not find
+
+trick:
+match the documents and count how many matched -- use-- $count
+group the document and count how many in each group --use -- $sum:1
+
+$project
+find all the hyundai cars and only show maker,model and fuel_types
+
+db.cars.aggregate([
+   {
+      $match:{maker:"Hyundai"}
+   },
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         fuel_type:1
+      }
+   }
+])
+$sort
+
+db.cars.aggregate([
+   {
+      $match:{maker:"Hyundai"}
+   },
+   {
+      $project:{
+         maker:1,
+         model:1,
+      }
+   },
+   {
+      $sort:{
+         model:1
+      }
+   }
+])
+
+$sortByCount
+
+db.cars.aggregate([
+   {
+      $sortByCount:"$maker"
+   }
+])
+this create groups based on this 'maker' field, then provide the count in each group, then sort based on that 'maker' field
+
+$unwind
+it is used- suppose if we have array of owner objects in single document
+so i want split the same document for each owner
+db.cars.aggregate([ { $unwind: "$owners" }])
+
+so what is pipline then?
+
+string operators
+$concat
+print all the cars--model+maker name
+
+
+db.cars.aggregate([
+   {
+      $match:{
+         maker:"Hyundai"
+      },
+   },{    
+      $project:{
+            _id:0,
+            name:{$concat:["$maker"," ","$model"]}
+         }
+   }
+])
+
+toUpper
+db.cars.aggregate([
+   {
+      $match:{
+         maker:"Hyundai"
+      }
+   },
+   {
+      $project:{
+         _id:0,
+         model:{
+            $toUpper:"$model"
+         }
+      }
+   }
+])
+
+$regexMatch
+styntax-{
+  $regexMatch:{
+      input:which field we want to check,
+     regex: the pattern that we are checking
+      i: the option for mathicng the pattern
+  }
+}
+
+
+  Q. add a flag is_diesel=true/false for each car
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         is_diesel:{
+            $regexMatch:{
+               input:"$fuel_type",
+               regex:"Die"
+            }
+         }
+
+      }
+   }
+])
+
+now i take this data and add another stage which group based on that flag and count in each group--
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         is_diesel:{
+            $regexMatch:{
+               input:"$fuel_type",
+               regex:"Die"
+            }
+         }
+
+      }
+   },
+   {
+      $group:{
+         _id:"$is_diesel",
+         total:{
+            $sum:1
+         }
+      }
+   }
+])
+
+$out
+after aggregating store the result in another collection
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1
+      }
+   },{
+      $out:"all_models"
+   }
+])
+then we can operate on that new collection this just like view in sql
+
+### Airthmetic Operators
+
+$add   $subtract  $divide  $multiply  $round $abs   $ceil
+$add
+
+db.cars.aggregate([
+   {
+      $project:{
+         sum:{
+            $add:[1,2,3,4,5]
+         }
+      }
+   }
+])
+
+print all the cars and their old price and newPrice with the hike of 8000
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         oldPrice: "$price",
+         newPrice:{
+            $add:["$price",8000]
+         }
+      }
+   }
+])
+
+find or aggregate the end results comes as an array
+
+addFields/set
+To add temporary fields, use either `$project` or `$addFields` — but if the field needs to be reused in later stages, **only `$addFields`** works; fields added in `$project` **can’t** be used in the next stage.
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         price:1
+      }
+   },
+   {
+      $addFields:{
+         price_in_lakhs:{
+            $divide:["$price",100000]
+         }
+      }
+   }
+])

@@ -1,0 +1,218 @@
+
+db.cars.find(
+{
+   $not:[
+      {"fuel_type": "Diesel"},
+      {"engine.type": "Turbocharged"},
+      {"sunroof": true}
+   ]
+}
+)
+
+db.cars.aggregate([
+   {
+      $group:{
+         _id:"$maker",
+         totalCars: {$sum:1}
+      }
+   }
+])
+
+db.cars.aggregate([
+   {$group:{
+      _id:"$fuel_type",
+      totalCars:{$sum:1},
+      avgPrice:{$avg:"$price"}
+   }}
+])
+
+db.cars.aggregate(
+[
+   {$match:{
+      maker:"Hyundai"
+   }},
+   {
+      $count:"totalCars"
+   }
+])
+
+
+db.cars.aggregate(
+[
+   {
+      $match:{maker:"Hyundai"}
+   },
+   {
+      $group:{
+         _id:"$fuel_type",
+      }
+   },
+   {
+      $count:"total"
+   }
+
+]
+)
+
+db.cars.aggregate([
+   {
+      $match:{maker:"Hyundai"}
+   },
+   {
+      $project:{
+         maker:1,
+         model:1,
+      }
+   },
+   {
+      $sort:{
+         model:1
+      }
+   }
+])
+
+
+
+db.cars.aggregate([
+   {
+      $sortByCount:"$maker"
+   }
+])
+
+
+db.cars.aggregate([
+   {
+      $match:{
+         maker:"Hyundai"
+      },
+   },{    
+      $project:{
+            _id:0,
+            name:{$concat:["$maker", "$model"]}
+         }
+   }
+])
+
+db.cars.aggregate([
+   {
+      $match:{
+         maker:"Hyundai"
+      }
+   },
+   {
+      $project:{
+         _id:0,
+         model:{
+            $toUpper:"$model"
+         }
+      }
+   }
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         is_diesel:{
+            $regexMatch:{
+               input:"$fuel_type",
+               regex:"Die"
+            }
+         }
+
+      }
+   },
+   {
+      $group:{
+         _id:"$is_diesel",
+         total:{
+            $sum:1
+         }
+      }
+   }
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1
+      }
+   },{
+      $out:"all_models"
+   }
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         sum:{
+            $add:[1,2,3,4,5]
+         }
+      }
+   }
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         oldPrice: "$price",
+         newPrice:{
+            $add:["$price",8000]
+         }
+      }
+   }
+])
+
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         price:1
+      }
+   },
+   {
+      $addFields:{
+         price_in_lakhs:{
+            $divide:["$price",100000]
+         }
+      }
+   }
+])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         price:1
+      }
+   },
+   {
+      $addField:{
+         price_in_Lakhs
+      }
+   }
+])
