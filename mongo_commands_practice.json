@@ -216,3 +216,167 @@ db.cars.aggregate([
       }
    }
 ])
+
+
+
+
+
+
+
+
+db.cars.aggregate([
+   {$project:{
+      _id:0,
+      maker:1,
+      model:1,
+      price:1
+   }},
+   {
+      $addFields:{
+         price_in_lakhs:{
+            $divide:["$price",100000]
+         }
+      }
+   }
+])
+
+
+
+
+
+
+
+
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         price:1
+      }
+   },
+   {
+      $addFields:{
+         price_in_lakhs:
+         {
+            $concat: [
+            {$toString:{
+               $divide:["$price",100000]
+            },
+         },
+
+            "Lakhs"
+         ]
+         }
+        
+      }
+   }
+])
+
+calculate total service cost of hyundai car
+db.cars.aggregate([
+   {
+      $match:{
+         maker:"Hyundai"
+      }
+   },
+   {
+      $addFields:{
+         totalServiceCost:{
+            $sum:"$service_history.cost"
+         }
+      }
+   },{
+      $group:{
+         _id:null,
+         total:{
+            $sum:"$totalServiceCost"
+         }
+      }
+   },
+   {
+      $project:{
+         _id:0,
+         model:1,
+         totalServiceCost:1,
+         total:1
+      }
+   }
+
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         maker:1,
+         model:1,
+         totalCost:{
+            $sum:"$service_history.cost"
+         }
+      }
+   }
+])
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         category:{
+            $cond:{
+               if:{
+                  $eq:["$fuel_type","Petrol"],
+               },
+               then:"Patrol Car",
+               else:"Non Patrol Car"
+            }
+         }
+      }
+   }
+])
+
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         budge_cat:{
+            $switch:{
+               branches:[
+                  {case:{
+                     $lt:["$price",500000]
+                  },
+                  then:"Budget"
+               },
+
+                  {
+                     case:{
+                        $gte:["$price",100000]
+                     },
+                     then:"Premium"
+                  }
+               ]
+            }
+         }
+      }
+   }
+])
+
+
+
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         date:"$$NOW"
+      }
+   }
+])

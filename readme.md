@@ -571,6 +571,54 @@ trick:
 match the documents and count how many matched -- use-- $count
 group the document and count how many in each group --use -- $sum:1
 
+
+
+* When you use `$group`, you **must specify an `_id`** — it defines how documents are grouped.
+
+#### 🔹 Case 1: Group by a field
+
+```js
+{ $group: { _id: "$maker", total: { $sum: 1 } } }
+```
+
+* Groups documents **by the value of `maker`**.
+* Each unique `maker` becomes a group.
+
+#### 🔹 Case 2: Group all documents together
+
+```js
+{ $group: { _id: null, total: { $sum: "$price" } } }
+```
+
+* `_id: null` tells MongoDB to **not group by any field**.
+* All documents are treated as **one single group**.
+* Useful when you want to compute a **grand total**, average, etc.
+
+
+#### ✅ 2. `$sum`, `$avg`, etc.:
+
+🔹 **Inside `$group`** → Used to calculate **per-group aggregations**
+Example:
+
+```js
+{ $group: { _id: "$maker", totalCost: { $sum: "$price" } } }
+```
+
+🔹 **Outside `$group` (e.g., in `$project`, `$addFields`)** → Used to calculate **within an array field**
+Example:
+
+```js
+{ $addFields: { totalCost: { $sum: "$service_history.cost" } } }
+```
+
+* Here, `$sum` computes the **sum of values in an array** (not across documents).
+
+---
+
+
+
+
+
 $project
 find all the hyundai cars and only show maker,model and fuel_types
 
@@ -779,3 +827,246 @@ db.cars.aggregate([
       }
    }
 ])
+
+Conditional Operators
+
+$cond   $ifNull   $switch
+
+$cond
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         category:{
+            $cond:{
+               if:{
+                  $eq:["$fuel_type","Petrol"],
+               },
+               then:"Patrol Car",
+               else:"Non Patrol Car"
+            }
+         }
+      }
+   }
+])
+
+
+$switch
+db.cars.aggregate([
+  {
+    $project: {
+      model: 1,
+      price: 1,
+      segment: {
+        $switch: {
+          branches: [
+            { case: { $lte: ["$price", 500000] }, then: "Budget" },
+            { case: { $lte: ["$price", 1000000] }, then: "Mid-range" }
+          ],
+          default: "Premium"
+        }
+      }
+    }
+  }
+])
+
+
+varibles
+system varibles
+NOW
+stores current system date
+
+db.cars.aggregate([
+   {
+      $project:{
+         _id:0,
+         model:1,
+         maker:1,
+         date:"$$NOW"
+      }
+   }
+])
+
+user defined varibles
+These variables allow you to store values and
+reuse them within the same pipeline
+
+### 📘 User-Defined Variables in MongoDB Aggregation
+
+#### ✅ 1. **Local Variables** (`$let`)
+
+* Scope: **Only within the current expression**.
+* Syntax:
+
+  ```js
+  $let: {
+    vars: { x: <expression> },
+    in: <expression using $$x>
+  }
+  ```
+* Example:
+
+  ```js
+  {
+    $project: {
+      model: 1,
+      doublePrice: {
+        $let: {
+          vars: { p: "$price" },
+          in: { $multiply: ["$$p", 2] }
+        }
+      }
+    }
+  }
+  ```
+
+  🔹 Here, `p = $price`, used as `$$p` to calculate `doublePrice`.
+
+---
+
+#### ✅ 2. **Persistent Variables Across Stages**
+
+* Use `$addFields` to define a field once and reuse it in later stages.
+
+* Example:
+
+  ```js
+  {
+    $addFields: {
+      price_in_lakhs: { $divide: ["$price", 100000] }
+    }
+  },
+  {
+    $project: {
+      model: 1,
+      price_in_lakhs: 1
+    }
+  }
+  ```
+
+🔹 `price_in_lakhs` is now accessible in **all following stages**.
+
+---
+in cli we can create varible and can use it-
+my_price=1500000
+db.cars.find({ price: my_price })
+
+
+hydui={maker:"Hyundai"}
+ db.cars.find(hydui)
+
+ 
+
+Object.keys(this)
+It shows all functions and global variables in the current database context,
+
+
+###data modeling
+MongoDB is a NoSQL database, it doesn't
+enforce strict schema relationships like foreign
+keys in relational databases.
+but still we can model relationships between documents in
+MongoDB using a few approaches. 
+
+
+The two main types of relationships are:
+
+
+Embedded Documents (Denormalization)
+
+Referenced Documents (Normalization)
+
+how can we maintain relationship in mongoDB
+let say users and orders
+1 to many-
+
+embeded documents
+
+
+Normalization is the process of storing data in its corresponding table or collection to prevent duplication and redundancy and to better manage the data. It involves breaking down data into smaller, logical parts and putting them into their own proper place. In SQL, you store related data in separate tables and link them using foreign keys. In NoSQL, you store related data in separate collections and reference them with IDs from other collections. This way, you keep data clean, reduce repetition, and make updates easier and safer.
+ex-
+ storing customer data in its own "customer" table/collection and order data in its own "order" table/collection. These two are then linked by referencing the customer's primary key (PK) in the order table (SQL) or the customer ID in the order collection (NoSQL).
+
+---
+
+
+### **1. Embedded Document Example**
+
+```json
+{
+  "_id": ObjectId("user1"),
+  "username": "john_doe",
+  "email": "john@example.com",
+  "orders": [
+    {
+      "orderId": "order1",
+      "product": "iPhone 13",
+      "total": 999
+    },
+    {
+      "orderId": "order2",
+      "product": "MacBook Pro",
+      "total": 2500
+    }
+  ]
+}
+```
+
+---
+
+### **2. Referenced Document Example**
+
+**User document**:
+
+```json
+{
+  "_id": ObjectId("user1"),
+  "username": "john_doe",
+  "email": "john@example.com",
+  "orderIds": [
+    ObjectId("order1"),
+    ObjectId("order2")
+  ]
+}
+```
+
+**Order document**:
+
+```json
+{
+  "_id": ObjectId("order1"),
+  "product": "iPhone 13",
+  "total": 999
+}
+```
+
+```json
+{
+  "_id": ObjectId("order2"),
+  "product": "MacBook Pro",
+  "total": 2500
+}
+```
+
+---
+
+### **When to Use What**
+
+* **Use Embedded Documents**:
+
+  * **When to use**: If the data is **small** and you want **fast access** to all related information in one document.
+  * **Pros**: Faster read performance, simpler data structure, no need for joins.
+  * **Cons**: Can lead to large documents if data grows, possible duplication of data.
+
+* **Use Referenced Documents**:
+
+  * **When to use**: If the data is **large**, needs to be **shared**, or grows frequently.
+  * **Pros**: Reduces data duplication, easier to update data, better for relationships between multiple records.
+  * **Cons**: Slower reads (requires joins/`$lookup`), more complex queries.
+
+---
+
+
