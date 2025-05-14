@@ -167,7 +167,7 @@ mysql,postgresql, .sql file excuted by gui,cli then that goes to server, here di
 mongosh
 ```
 
-**Remote server:**
+**local server with authentication:**
 
 ```bash
 mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
@@ -203,7 +203,6 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
    ```
    mongod --auth
    ```
-Yes, your summary is **correct and well-structured**. Just a minor tweak for full clarity:
 
 ---
 
@@ -246,7 +245,25 @@ Authentication Database: admin ✅ (very important!)
 
 Then click "Connect".
 
+✅ If authentication is enabled, the connection string is the same (for Mongoose, CLI, GUI), and you must specify the target DB to initially connect to.
 
+
+Create user in admin DB if they need access to multiple databases or need administrative roles.
+Create user in a specific DB if they only need access to that one database.
+
+If user is created in admin DB, then you must add authSource=admin in the connection string.
+
+No authSource needed, since the user is created in the same DB (cricket).
+use cricket
+db.createUser({
+  user: "rohit",
+  pwd: "password",
+  roles: [{ role: "readWrite", db: "cricket" }]
+})
+mongosh "mongodb://rohit:password@127.0.0.1:27017/cricket"
+
+MongoDB Atlas (cloud) → mongodb+srv://
+Local MongoDB server → mongodb://
 
 ---
 ### show databases
