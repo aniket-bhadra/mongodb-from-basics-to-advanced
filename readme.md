@@ -266,6 +266,30 @@ MongoDB Atlas (cloud) → mongodb+srv://
 Local MongoDB server → mongodb://
 
 ---
+
+
+### Two Common Execution Scenarios
+
+#### Scenario 1: Executing a Single Command
+When you highlight and execute a specific command within a file:
+- **Only the highlighted command is sent directly to the server**
+- No file execution occurs in any meaningful sense
+- The tool simply reads your selection and sends it
+
+#### Scenario 2: Executing an Entire File
+When you run all commands in a file:
+- Commands are sent to the server sequentially, one after another
+- The file isn't "executed" as a program
+- Each command is independently processed by the server
+
+Database commands run in two ways: Direct Command Path (typed in CLI/GUI → sent instantly to server) and File-Based Path (.sql for PostgreSQL/MySQL, .js for MongoDB → read by tools → sent line by line). Direct is best for quick queries; file-based is ideal for complex or reusable logic. Both methods work across CLI and GUI in all three databases.
+
+When using files, the file itself isn’t executed — it’s just a container of commands. The CLI/GUI tool reads the file and sends commands one by one to the server. If you highlight and run a single command, only that specific command is sent and executed.
+
+### Common Misconception
+When people say "execute the file," what's actually happening is the interface is reading and sending each command to the server sequentially. The database server receives and processes individual commands, not the file as a whole.
+
+
 ### show databases
 show dbs
 
