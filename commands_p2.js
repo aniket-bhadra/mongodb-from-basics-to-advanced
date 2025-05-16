@@ -409,16 +409,49 @@ db.users.aggregate([
     },
   },
   {
-    $out:"all"
-  }
+    $out: "all",
+  },
 ]);
 
 db.orders.aggregate([
-  {$lookup:{
-    from:"users",
-    localField: "user_id",
-    foreignField:"_id",
-    as: "users"
-  }}
-])
+  {
+    $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "users",
+    },
+  },
+]);
 
+//schema validation
+db.createCollection("user2", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "phone"],
+      properties: {
+        name: {
+          bsonType: "string",
+          description: "name should be string",
+        },
+      },
+      validationLevel: "strict",
+      validationAction: "",
+    },
+  },
+});
+// validationLevel: "strict"-->document must fully match the schema validation rules, if it does not then it wont be inserted/updated in the collection
+// validationLevel: "moderate"-->
+
+//validationAction: error->If a document does not meet the schema validation criteria, MongoDB will throw an error and reject the insert or update operation.
+//validationAction: warn--> MongoDB logs a warning message when a document does not meet the schema validation criteria but still allows the insert or update operation.
+
+// db.user2.insertOne({ name: 123, phone: 2567544 });
+// // db.user1.insertOne({ name: "babu", });
+
+//an index is data structures
+db.cars.createIndex({ maker: 1 });
+db.cars.createIndex({ model: 1 }, { unique: true });
+db.cars.dropIndex("maker");
+db.cars.getIndexes()
