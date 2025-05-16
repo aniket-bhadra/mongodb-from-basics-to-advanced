@@ -293,7 +293,7 @@ When people say "execute the file," what's actually happening is the interface i
 ### show databases
 show dbs
 
-show collection
+show collections
 
 ### create database & use it
 use school
@@ -325,7 +325,8 @@ db.students.insertMany([
 db.students.find()
 
 db.cars.findOne({model:'Creta'})
-the methods you use in MongoDB shell (like find(), insertMany(), findOne()) are similar to those in Mongoose, but Mongoose adds additional features like schema validation, middleware, and more.
+the methods you use in MongoDB shell (like find(), insertMany(), findOne()) are similar to those in Mongoose, but Mongoose adds additional features like schema validation, middleware,Population (similar to joins in SQL) and more.
+So MongoDB query syntax is fully supported in Mongoose, but Mongoose adds structure and functionality that makes working with MongoDB more developer-friendly in a Node.js environment.
 
 db.cars.find({},{model:1})
 this--{} match all the documents
@@ -352,6 +353,11 @@ db.cars.updateOne(
 ```
 It will only update the first document with model: "City", and if color field is not there even in that case it will add & put 'Red'
 
+```shell
+db.cars.updateMany( { fuel_type: "Diesel" }, { $set: { alloys: "yes" } } )
+```
+update all documents matching this fuel_type
+
 add a value on array filed
 ```shell
 db.cars.updateOne( { model:"City", }, { $push:{ features:"Heated seats" }} )
@@ -360,11 +366,8 @@ delete a value on array field
 ```shell
 db.cars.updateOne( { model:"City", }, { $pull:{ features:"Heated seats" }} )
 ```
-
-```shell
-db.cars.updateMany( { fuel_type: "Diesel" }, { $set: { alloys: "yes" } } )
-```
-update all documents matching this fuel_type
+$push adds elements to the end of an array,
+$pull removes all elements that match a specified condition.
 
 updating multiple values in array
  db.cars.updateOne( { model:"City" }, { $push:{ features:{ $each:["wireless charging", "voice control"]}}})
@@ -390,7 +393,7 @@ db.cars.deleteMany({})
 delete all documents
 
 ### data types
-mongoDB stroes data in BSON (binary json) format
+mongoDB stores data in BSON (binary json) format
 BSON includes all json data types & add more
 
 objectId,string,integer,double,boolean,array,object/embeded document
@@ -410,7 +413,7 @@ give greater than
 db.cars.find({ "engine.cc": { $gt: 1400 } })
 
 $in $nin
-$in is not range, it give me documetn which exactly matches any of the value
+$in is not range, it give me document which exactly matches any of the value of particular filed
 db.cars.find({ "engine.cc": {$in:[1498,2179] }})
 
 find a car which has array field, and i want from that array field this values "Diesel and Sunroof and Turbocharged Engine" should be there, all 3
@@ -428,14 +431,14 @@ db.cars.find(
 same way use--
 $or, $nor,
 
-element operators
+## element operators
 #exists, $type
 
-# $exist
+### $exist
 db.cars.find( { color: { $exists: true } } )
 whichever document has color field, return those
 
-# $type
+### $type
 $type
 Here we can filter the content based on type like string, bool etc
 This can be useful to find field with null values
@@ -468,6 +471,9 @@ db.cars.find( { model: { $type: "string" } })
   ```
 
 ---
+$in is used to match a field against a list of possible values. For example, it can be used to check if a name is either "Rohit", "Virat", or "Hardik".
+It also works with arrays of primitives—returning documents where the array contains any of the values specified in the $in array.
+$all does not work, if the field is not an array
 
 #### ✅ For arrays of **objects** (e.g., `liked: [{ user: "user1", time: 10 }]`):
 
@@ -561,22 +567,73 @@ db.collection.aggregate([
     }
   }
 ])
+$push = collects all values in array (with duplicates),
+$addToSet = collects only unique values in array.
 
 $match
-Hyundai cars having engine of more than 1200cc
+Hyundai cars having engine of more than 1000cc
 
 
-db.cars.aggregate(
+db.cars.aggregate([
+  {
+    $match:{
+      maker:"Hyundai",
+      "engine.cc":{$gt:1200}
+    }
+  }
+])
 
-               [{$match:
+We can achieve this with find(), but the problem is:
+find() supports multiple conditions, but not multiple stages.
 
-                       {maker:"Hyundai",
+For example, $match can be done with find(),
+but if you need to match first and then group,
+you must use the aggregation framework.
 
-                        "engine.cc":{$gt:1000}
+So:
 
-                 }}])
+If you're only matching conditions, find() is enough.
+But if you need to perform further operations (like $group, $sort, etc.) after matching, then aggregate() should be used. 
 
-we can achve this with find, but the problem with find is , with find we can use multple stages we  can use multple conditon but not multiple stages that is $match is used here,ex- if have to match with something and then need to group that is in such cases aggrete framework is used instead of find, beucase in find we can give multple conditn after that we can group or use other aggre things,so if only matching with cndtion then find can be used but if after matching we need to perfrom some more advanced opertion, in thse cases aggrete should be used  
+
+### ✅ Use `find()`:
+
+* For **simple filtering** (`$match`)
+* For **basic field selection** (`projection`)
+* Fast and easy
+
+---
+
+### ✅ Use `aggregate()`:
+
+* For **multi-stage operations**
+* When you need **\$group**, **\$sort**, **\$lookup**, etc.
+* For **data transformation and analysis**
+
+---
+
+### 🧠 Key Rule:
+
+> **Use `find()` for filtering. Use `aggregate()` for analysis.**
+> **If your use case grows beyond basic filtering, **just switch to aggregation**.
+
+---
+
+### ❌ Example `find()` can’t do:
+
+```js
+// Get count of users by city where age > 25
+db.users.aggregate([
+  { $match: { age: { $gt: 25 } } },
+  { $group: { _id: "$city", total: { $sum: 1 } } }
+])
+```
+
+This needs **\$match + \$group**, so `find()` won't work.
+Only `aggregate()` can handle this kind of logic.
+
+---
+
 
 $count
 
@@ -592,21 +649,49 @@ db.cars.aggregate(
 ])
 
 
-count no of diesel & petrol cars of hyundai
-db.cars.aggregate(
-[
-   {
-      $match:{maker:"Hyundai"}
-   },
-   {
-      $group:{
-         _id:"$fuel_type",
-         totalCars:{$sum:1},
-      }
-   }
-]
-)
-see thing can not be achved with find, that is why for this kind of opertion aggrete shold used not find
+//count no of diesel & petrol cars of hyundai
+db.cars.aggregate([
+  {
+    $match: {
+      maker: "Hyundai",
+    },
+  },
+  {
+    $group: {
+      _id: "$fuel_type",
+      totalCars: { $sum: 1 },
+    },
+  },
+]);
+//this shows electric,petrol,diesel cars count but i want only petrol and diesel-
+//After $group: { _id: "$fuel_type" },
+// _id becomes the fuel_type.
+
+// So when you do:
+
+// $match: { _id: "Petrol" }
+// You're matching on the grouped fuel_type.
+
+db.cars.aggregate([
+  {
+    $match: {
+      maker: "Hyundai",
+    },
+  },
+  {
+    $group: {
+      _id: "$fuel_type",
+      total: { $sum: 1 },
+    },
+  },
+  {
+    $match: {
+      _id: { $in: ["Petrol", "Diesel"] },
+    },
+  },
+]);
+
+see this things can not be achieved with find, that is why for this kind of opertion aggrete shold used not find
 
 trick:
 match the documents and count how many matched -- use-- $count
@@ -655,10 +740,6 @@ Example:
 * Here, `$sum` computes the **sum of values in an array** (not across documents).
 
 ---
-
-
-
-
 
 $project
 find all the hyundai cars and only show maker,model and fuel_types
@@ -709,10 +790,13 @@ it is used- suppose if we have array of owner objects in single document
 so i want split the same document for each owner
 db.cars.aggregate([ { $unwind: "$owners" }])
 
-so what is pipline then?
+### so what is pipeline then?
+A pipeline is a sequence of stages that process documents step by step.
+Each stage ($match, $group, etc.) transforms the data and passes it to the next.
+It’s like a data flow — documents go through filters, grouping, sorting, or reshaping in order.
 
-string operators
-$concat
+### string operators
+## $concat
 print all the cars--model+maker name
 
 
@@ -729,7 +813,7 @@ db.cars.aggregate([
    }
 ])
 
-toUpper
+## toUpper
 db.cars.aggregate([
    {
       $match:{
@@ -746,17 +830,17 @@ db.cars.aggregate([
    }
 ])
 
-$regexMatch
-styntax-{
+## $regexMatch
+syntax-{
   $regexMatch:{
       input:which field we want to check,
      regex: the pattern that we are checking
-      i: the option for mathicng the pattern
+      i: the option for matching the pattern
   }
 }
 
 
-  Q. add a flag is_diesel=true/false for each car
+Q. add a flag is_diesel=true/false for each car
 db.cars.aggregate([
    {
       $project:{
@@ -817,8 +901,8 @@ then we can operate on that new collection this just like view in sql
 
 ### Airthmetic Operators
 
-$add   $subtract  $divide  $multiply  $round $abs   $ceil
-$add
+#### $add   $subtract  $divide  $multiply  $round $abs   $ceil
+### $add
 
 db.cars.aggregate([
    {
@@ -846,10 +930,16 @@ db.cars.aggregate([
    }
 ])
 
-find or aggregate the end results comes as an array
+notes:
+find or aggregate the end results always comes as an array
 
-addFields/set
-To add temporary fields, use either `$project` or `$addFields` — but if the field needs to be reused in later stages, **only `$addFields`** works; fields added in `$project` **can’t** be used in the next stage.
+## addFields/set
+
+> * To add temporary fields, use either `$project` or `$addFields`.
+> * Fields added in `$project` can be used **only in the immediate next stage**.
+> * Fields added in `$addFields` can be reused in **deeper stages**.
+>   So if the field needs to be reused later in the pipeline, **use `$addFields`**.
+
 
 db.cars.aggregate([
    {
@@ -869,11 +959,10 @@ db.cars.aggregate([
    }
 ])
 
-Conditional Operators
-
+## Conditional Operators
 $cond   $ifNull   $switch
 
-$cond
+### $cond
 
 db.cars.aggregate([
    {
@@ -915,8 +1004,8 @@ db.cars.aggregate([
 ])
 
 
-varibles
-system varibles
+### variables
+#### system variables
 NOW
 stores current system date
 
@@ -931,7 +1020,7 @@ db.cars.aggregate([
    }
 ])
 
-user defined varibles
+user defined variables
 These variables allow you to store values and
 reuse them within the same pipeline
 
@@ -991,47 +1080,37 @@ reuse them within the same pipeline
 🔹 `price_in_lakhs` is now accessible in **all following stages**.
 
 ---
-in cli we can create varible and can use it-
+in cli we can create variable and can use it-
 my_price=1500000
 db.cars.find({ price: my_price })
 
 
-hydui={maker:"Hyundai"}
- db.cars.find(hydui)
+Hyundai={maker:"Hyundai"}
+ db.cars.find(Hyundai)
 
  
-
 Object.keys(this)
 It shows all functions and global variables in the current database context,
 
+--- 
+### data modeling
+MongoDB is a NoSQL database, so it doesn't enforce strict schema relationships like foreign keys in relational databases.
+But we can still connect data between documents.
 
-###data modeling
-MongoDB is a NoSQL database, it doesn't
-enforce strict schema relationships like foreign
-keys in relational databases.
-but still we can model relationships between documents in
-MongoDB using a few approaches. 
-
-
-The two main types of relationships are:
-
-
+There are two main ways to connect data in MongoDB:
 Embedded Documents (Denormalization)
-
 Referenced Documents (Normalization)
 
-how can we maintain relationship in mongoDB
-let say users and orders
-1 to many-
-
-embeded documents
-
-
+## Normalization
 Normalization is the process of storing data in its corresponding table or collection to prevent duplication and redundancy and to better manage the data. It involves breaking down data into smaller, logical parts and putting them into their own proper place. In SQL, you store related data in separate tables and link them using foreign keys. In NoSQL, you store related data in separate collections and reference them with IDs from other collections. This way, you keep data clean, reduce repetition, and make updates easier and safer.
 ex-
  storing customer data in its own "customer" table/collection and order data in its own "order" table/collection. These two are then linked by referencing the customer's primary key (PK) in the order table (SQL) or the customer ID in the order collection (NoSQL).
 
 ---
+how can we maintain relationship in mongoDB
+let say users and orders
+1 to many-
+
 
 
 ### **1. Embedded Document Example**
@@ -1107,6 +1186,167 @@ ex-
   * **When to use**: If the data is **large**, needs to be **shared**, or grows frequently.
   * **Pros**: Reduces data duplication, easier to update data, better for relationships between multiple records.
   * **Cons**: Slower reads (requires joins/`$lookup`), more complex queries.
+
+---
+
+### $lookup
+db.users.aggregate([
+    {
+        "$lookup": {
+            "from": "orders",                         // The target collection to join with
+            "localField": "_id",                     // The field from the 'users' collection
+            "foreignField": "user_id",                // The field from the 'orders' collection
+            "as": "orders"                         // The name of the new array field to add the `users' 
+        }
+    }
+])
+
+### schema validation
+needed to prevent inserting non sense, useless data
+
+### we can create validation while creating collection
+db.createCollection("user2", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "phone"],
+      properties: {
+        name: {
+          bsonType: "string",
+          description: "name should be string",
+        },
+      },
+      validationLevel: "strict",
+      validationAction: "error",
+    },
+  },
+});
+// validationLevel: "strict"-->document must fully match the schema validation rules, if it does not then it wont be inserted/updated in the collection
+// validationLevel: "moderate"-->MongoDB checks new documents and only the fields you change during updates.It ignores old invalid data if you don’t touch it.
+
+//validationAction: error->If a document does not meet the schema validation criteria, MongoDB will throw an error and reject the insert or update operation.
+//validationAction: warn--> MongoDB logs a warning message when a document does not meet the schema validation criteria but still allows the insert or update operation.
+
+### update the existing collection to add validation
+db.runCommand({
+   collMod: "users",
+   validator: {
+      $jsonSchema: {
+         // after this point everything remains same like adding validation while creating collection
+      }
+   }
+})
+
+### index
+An index is a data structure that improves query speed by allowing the database to quickly locate and access the required data without scanning every document or row in the collection or table.
+
+Indexed values are sorted, and the tree stores pointers (like links) to the actual data. This is exactly how B/B+ trees work.
+
+In SQL, the primary key (PK) is automatically indexed.
+In MongoDB, the _id field is also automatically indexed.
+
+db.cars.createIndex({ maker: 1 });
+db.cars.createIndex({ model: 1 }, { unique: true });
+db.cars.dropIndex("maker");
+db.cars.getIndexes()
+
+Types of Indexes:
+
+Single Field Index
+Compound Index: Involves multiple fields.
+Unique Index: Index that ensures no two documents have the same value for the indexed field.
+TTL Index: TTL (Time to Live) indexes that are used to automatically remove documents after a certain period.TTL index removes the document, not the index
+
+### Transaction
+A **MongoDB transaction** is a sequence of operations executed as a single unit, ensuring all succeed or all rollback, maintaining **ACID** properties.
+
+**ACID Explained (Short):**
+
+* **Atomicity: All or nothing.** ensures that a transaction is atomic, it means that either the entire transaction completes fully or doesn't execute at all,If a transaction has multiple operations, and one of them fails, the whole transaction is rolled back, leaving the database unchanged. This avoids partial updates
+* **Consistency: Valid state before & after.**Consistency makes sure the database follows all rules before and after a transaction. If a transaction breaks any rule, it's rejected to keep the data correct.
+* **Isolation: No interference between transactions.**Isolation means many transactions can run at the same time, but they don’t affect each other. One transaction’s changes stay invisible to others until it's finished—this avoids reading uncommitted or changing data.
+* **Durability: Once committed, changes persist.** the updates and modifications to the database are stored in and written to disk.
+
+
+**Simplest Example (ACID-compliant):**
+
+```js
+const session = await client.startSession();
+session.startTransaction();
+try {
+  await users.updateOne({ _id: 1 }, { $inc: { balance: -100 } }, { session });
+  await users.updateOne({ _id: 2 }, { $inc: { balance: 100 } }, { session });
+  await session.commitTransaction(); // All succeed
+} catch (e) {
+  await session.abortTransaction(); // All rollback
+}
+session.endSession();
+```
+
+ACID principles exist in SQL databases too.
+SQL uses Transaction Control Language (TCL) commands like START TRANSACTION, COMMIT, and ROLLBACK to manage transactions that follow ACID—same concept as in MongoDB.
+
+
+### 🔁 Replication –
+
+* A **replica set** = 1 **primary** + 1+ **secondary** nodes.
+* All **writes** go to the **primary**.
+* **Secondaries** sync data from primary (asynchronously).
+* **Reads** can go to secondaries (if enabled) = **faster reads** + **high availability**.
+* If **primary fails**, one secondary is auto-promoted (no SPOF).
+
+✅ This setup **is default in MongoDB Atlas** (3-node replica set).
+
+---
+
+### ⚖️ Sharding – The Basics
+
+* For **huge datasets** or **high write load**, a single replica set isn’t enough.
+* **Sharding** splits data across multiple **shards** = **horizontal scaling**.
+*  Each shard is a **replica set**, so every shard has its own primary + secondaries.
+
+---
+
+### 🤖 Key Components in Sharding
+
+1. **Shard key** = Field used to split data across shards. Must be present in every document.
+2. **Shard** = storing a subset of data.
+3. **config servers** = Store metadata about where data lives (shard mapping).
+4. **mongos (router)** = Receives client requests and routes to correct shard(s).
+---
+
+### 🧠 Answers to Your Questions
+
+
+**Q1: If I have 1M documents and sharding splits 0.5M per shard, do I need to tell MongoDB which shard to use during queries?**
+❌ No. You **don’t need to know** where the data is.
+✅ `mongos` + **shard key** handle this automatically.But You must design your **shard key carefully** – it affects performance.
+
+
+**Q2: What is `mongos` and how does it route?**
+
+* `mongos` is a **router** between client & shards.
+* It uses **config servers** to redirect correct shards
+---
+
+
+Example with 1M documents:
+
+Shard 1 stores 500k docs, managed by its own replica set (1 primary + 2 secondaries).
+Shard 2 stores 500k docs, managed by its own replica set (1 primary + 2 secondaries).
+Config servers store metadata about which shard has what data ranges (based on shard key).
+mongos router asks config servers and directs your query to the correct shard(s)
+Total: 6 servers for data + config servers to manage metadata.
+
+config servers are deployed as a replica set (normally with 3 members) for high availability of the metadata, not as a single server. Also, you'll typically have multiple mongos router instances for load balancing and redundancy.
+### 🧠 Visualization (Simplified)
+
+```
+Client → mongos → config server metadata (Config servers store shard key ranges and cluster metadata)
+
+Shard 1 = replica set → [Primary, Secondary, Secondary]
+Shard 2 = replica set → [Primary, Secondary, Secondary]
+```
 
 ---
 
