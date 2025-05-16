@@ -1297,6 +1297,11 @@ SQL uses Transaction Control Language (TCL) commands like START TRANSACTION, COM
 
 ✅ This setup **is default in MongoDB Atlas** (3-node replica set).
 
+In MongoDB Atlas:
+
+Writes are not scaled — they go only to the primary.
+Reads can be scaled — you can configure read preferences to allow reads from secondary servers, helping distribute read load.
+
 ---
 
 ### ⚖️ Sharding – The Basics
@@ -1348,6 +1353,59 @@ Shard 1 = replica set → [Primary, Secondary, Secondary]
 Shard 2 = replica set → [Primary, Secondary, Secondary]
 ```
 
+
+#### sharding proper example
+In NoSQL, we use horizontal scaling via sharding, where a shard key (a field like userId) is used to split data across servers. Since NoSQL is schema-flexible and avoids joins, it's easy to partition collections like orders by userId.
+
+In NoSQL, we do horizontal scaling with sharding. For example, suppose we have `users` and `orders` collections and 1M data. To shard, we can use `userId` as shard key and divide the `orders` collection into 3 shards like:
+
+* `userId` 1 to 333K → **orders for these users live in shard1**
+* `userId` 333K to 666K → **orders for these users live in shard2**
+* `userId` 666K to 1M → **orders for these users live in shard3**
+
+But if we perform `$lookup`, then we have to be careful. If `users` stays on a single shard (or sharded differently), `$lookup` will be slow because MongoDB must fetch data across shards/servers.
+
+So to keep `$lookup` fast, you should either:
+
+* Embed user info inside orders (no join needed),
+* Or shard both `users` and `orders` by the same shard key (e.g., `userId`), so related data lives on the same shard/server.
+
 ---
 
+### why horizontal scaling is harder in sql compare to no sql?
 
+The reason **horizontal scaling is difficult in SQL** is because:
+
+* SQL strictly enforces **schema rules**, **constraints**, and **ACID principles** — even after joins.
+* So it's very hard to choose a shard key without breaking **joins**, **consistency**, or violating rules.
+* This lack of flexibility makes horizontal scaling **complex and risky**.
+
+But in **NoSQL (like MongoDB):**
+
+* It doesn’t strictly follow schema rules or constraints.
+* After `$lookup` (join), it **doesn’t enforce ACID strictly**.
+* **ACID is optional** — only applied **when you explicitly use a transaction**.
+* This flexibility makes **horizontal scaling easier and more practical**.
+
+
+
+
+## mongoDB Interview Qs
+
+### SQL vs NoSQL: Differences, Pros & Cons, and When to Use
+
+#### **NoSQL**
+
+* **Scalability**: Designed to scale horizontally by adding more servers.
+* **Flexibility**: Schema-less design allows easy handling of large, diverse, and semi/unstructured datasets—ideal for real-time analytics.
+* **Performance**: NoSQL writes are faster due to schema flexibility, no joins, and easier horizontal scaling.reads are faster for simple lookups but slower for complex queries.
+.
+* **Use Case**: Best for big data, dynamic schemas, real-time analytics, IoT, and applications requiring rapid scaling.
+
+#### **SQL**
+
+* **Scalability**: Scales vertically by adding more resources to a single server (limited, costly, complex).
+* **Flexibility**: Rigid schema—changes require altering the schema, which is complex and time-consuming.
+* **Data Suitability**: Excellent for structured data and complex queries; handling unstructured data is difficult.
+* **Performance**: SQL writes are slower due to strict schema and ACID compliance; reads are efficient for complex queries using joins, indexes, and structured relationships.
+* **Use Case**: Best for transactional systems (e.g., banking, ERP), where data integrity and complex querying are critical.
