@@ -157,8 +157,6 @@ Same as GUI tools, CLI tools like `psql`, `mysql`, and `mongosh` can connect to:
 
 ---
 
-mysql,postgresql, .sql file excuted by gui,cli then that goes to server, here directly running comand either cli or inteact with server with gui,no extra file creation
-
 ### 🔗 Connect to MongoDB:
 
 **Local server:**
@@ -1004,6 +1002,64 @@ db.cars.aggregate([
 ])
 
 
+### 🧠 What is `$setWindowFields`?
+
+A powerful aggregation stage (MongoDB 5.0+) that **does what SQL window functions do**, like:
+
+* Ranking documents (`$rank`, `$denseRank`, `$rowNumber`)
+* Running totals & moving averages
+* Comparing current vs previous/next documents
+* Partitioned and ordered analysis
+
+---
+
+### 🛠️ Syntax:
+
+```js
+{
+  $setWindowFields: {
+    partitionBy: "$<field>",           // (Optional)
+    sortBy: { <field>: 1 or -1 },      // (Required)
+    output: {
+      <newField>: { <windowFn>: <options> }
+    }
+  }
+}
+```
+
+---
+
+### ⚙️ Function types:
+
+#### ✅ No options needed:
+
+* `$rank: {}` → adds rank based on `sortBy`
+* `$denseRank: {}`
+* `$rowNumber: {}`
+
+#### ⚠️ Options needed:
+
+Functions like `$sum`, `$avg`, `$shift`, etc. need:
+
+```js
+<windowFn>: {
+  input: "$<field>",                  // what to apply function on
+  window: { documents: [start, end] } // range of documents to use
+}
+```
+
+---
+
+### 🧾 Common `window.documents` ranges:
+
+| Range                      | Meaning                               |
+| -------------------------- | ------------------------------------- |
+| `["unbounded", "current"]` | From first to current (running total) |
+| `[-1, 1]`                  | Previous, current, next               |
+| `[0, 0]`                   | Only current doc                      |
+
+---
+
 ### variables
 #### system variables
 NOW
@@ -1240,7 +1296,10 @@ db.runCommand({
 ### index
 An index is a data structure that improves query speed by allowing the database to quickly locate and access the required data without scanning every document or row in the collection or table.
 
-Indexed values are sorted, and the tree stores pointers (like links) to the actual data. This is exactly how B/B+ trees work.
+1. **MongoDB**, **PostgreSQL**, and **MySQL (InnoDB)** all use **B-tree (or B+ tree)** as the default indexing data structure.
+2. PostgreSQL and MySQL support other index types like that use various data structures beyond B-trees. **Hash, GiST, GIN, BRIN**, etc., for specific scenarios.
+
+Stores the indexed fields in a sorted order, along with pointers to the actual documents in the collection.
 
 In SQL, the primary key (PK) is automatically indexed.
 In MongoDB, the _id field is also automatically indexed.
@@ -1387,11 +1446,6 @@ But in **NoSQL (like MongoDB):**
 * **ACID is optional** — only applied **when you explicitly use a transaction**.
 * This flexibility makes **horizontal scaling easier and more practical**.
 
-
-
-
-## mongoDB Interview Qs
-
 ### SQL vs NoSQL: Differences, Pros & Cons, and When to Use
 
 #### **NoSQL**
@@ -1409,3 +1463,160 @@ But in **NoSQL (like MongoDB):**
 * **Data Suitability**: Excellent for structured data and complex queries; handling unstructured data is difficult.
 * **Performance**: SQL writes are slower due to strict schema and ACID compliance; reads are efficient for complex queries using joins, indexes, and structured relationships.
 * **Use Case**: Best for transactional systems (e.g., banking, ERP), where data integrity and complex querying are critical.
+
+### **MongoDB Interview Questions & Answers**
+
+1. **What is MongoDB, and how does it differ from relational databases?**
+
+   * MongoDB is a NoSQL database that stores data in flexible, JSON-like documents, unlike relational databases that use structured tables.
+   * This flexibility allows for easier scaling and handling of unstructured or semi-structured data.
+
+2. **Describe the structure of a MongoDB document.**
+
+   * A MongoDB document is a BSON object comprising field-value pairs, where values can be various data types, including nested documents.
+
+3. **What are the advantages of using MongoDB over traditional RDBMS?**
+
+   * Schema flexibility, horizontal scalability through sharding, high availability via replica sets, and efficient handling of unstructured data.
+
+4. **What is a replica set in MongoDB?**
+
+   * A replica set is a group of MongoDB servers that maintain the same data set, ensuring high availability through automatic failover.
+
+5. **Explain sharding in MongoDB.**
+
+   * Sharding is MongoDB's method of distributing data across multiple servers to handle large datasets and high-throughput operations.
+
+6. **Differentiate between find() and aggregate() in MongoDB.**
+
+   * find() retrieves documents based on criteria; aggregate() processes data through a pipeline for complex transformations.
+
+7. **How does MongoDB handle indexing? and its types**
+   MongoDB uses indexes to improve the speed of read operations. When a query is executed, MongoDB uses indexes to quickly locate the data instead of scanning every document in a collection.
+
+   Types of indexes in MongoDB:
+
+   Single field index: Created on one field.
+   Compound index: Created on multiple fields.
+   Multikey index: Used when indexing array fields.
+   Text index: Supports text search on string fields.
+   Geospatial index: Supports location-based queries.
+   Hashed index: For sharding using hashed values of a field.
+   TTL index: Automatically removes documents after a specified time.
+
+8. **What is the role of the \_id field in MongoDB?Can it be modified or removed?**
+
+   * The \_id field uniquely identifies each document in a collection; it's mandatory and immutable by default.It is mandatory and cannot be removed. However, it can be modified if necessary, though this is not recommended as it may lead to data inconsistency.
+
+9. **How does the aggregation framework work in MongoDB?**
+
+MongoDB's aggregation framework works like a data processing pipeline. Data flows through **a series of stages**, and each stage **transforms the data and passes the result to the next stage**.
+
+Common stages:
+
+* `$match`: Filters documents (like `WHERE` in SQL).
+* `$group`: Groups documents and performs operations like sum, avg.
+* `$sort`: Sorts the documents.
+* `$project`: Selects or reshapes fields.
+* `$lookup`: Joins documents from another collection.
+
+10. How does MongoDB handle transactions, and what is the significance of multi-document transactions?**
+
+   MongoDB supports **multi-document ACID transactions** starting from version 4.0 (for replica sets) and 4.2+ (for sharded clusters).
+
+   * Transactions ensure **atomicity**, meaning all operations inside a transaction either succeed together or fail together.
+   * **Multi-document transactions** are useful when you need to update multiple documents or collections in a consistent way (similar to relational databases).
+
+   Although MongoDB encourages a document-based design to reduce the need for transactions, they are available when necessary.
+11. How does MongoDB ensure data consistency and handle concurrency?**
+
+   MongoDB ensures consistency and concurrency using:
+
+   * **Document-level locking**: Only one write operation can occur on a document at a time, which allows high concurrency for reads and writes across different documents.
+   * **Replica sets**: Provide data redundancy and consistency. Writes go to the primary node, and changes are replicated to secondaries.
+   * **Write concerns** and **read concerns**: Let you control the level of acknowledgment and data consistency you require.
+
+   These mechanisms ensure MongoDB remains performant while handling concurrent operations safely.
+
+
+12. **What are common data modeling strategies in MongoDB?**
+
+    * Embedding for related data accessed together; referencing for normalized data; hybrid approaches combine both based on use cases.
+
+13. **What are TTL indexes, and when are they used?**
+
+    * TTL (Time To Live) indexes automatically delete documents after a specified time, useful for expiring data like sessions or logs.
+
+14. **How can you optimize MongoDB queries?**
+
+    * Use appropriate indexes, avoid full collection scan by providing more more filters/condition for the data you looking for, limit returned fields with projections, analyze queries with explain(), and denormalize data when beneficial.
+
+15. **How do you perform backup and restore operations in MongoDB?**
+
+    * Use mongodump for backups and mongorestore for restoration; MongoDB Atlas offers automated backup solutions.
+16. Describe the process of migrating data from an RDBMS to MongoDB.**
+
+   Migration involves several steps:
+
+   1. **Schema analysis**: Study the relational schema and relationships (1:1, 1\:N, N\:M).
+   2. **Schema design in MongoDB**: Decide between embedding (nested) or referencing (linked collections) depending on access patterns.
+   3. **Data export**: Export relational data using SQL queries, tools like `mysqldump`, or `pg_dump`.
+   4. **Data transformation**: Convert tabular rows into JSON documents.
+   5. **Data import**: Use `mongoimport`, custom scripts (Node.js, Python, etc.), or ETL tools to insert into MongoDB.
+   6. **Validation & indexing**: Check data integrity, and apply proper indexes.
+
+17. **What are some limitations of MongoDB, and how can they be addressed?**
+
+    * Limitations include lack of joins (mitigated by embedding or aggregation), document size limits (use referencing), and eventual consistency (managed with appropriate read/write concerns).
+
+18. **How does MongoDB Atlas differ from self-hosted MongoDB?**
+
+    * MongoDB Atlas is a fully managed cloud service offering automated scaling, backups, and monitoring, reducing operational overhead compared to self-hosted setups.
+
+19. **What is journaling in MongoDB?**
+
+    * Journaling records write operations to a journal file, ensuring data durability and aiding in recovery after crashes.
+
+20. **How do you handle schema versioning in MongoDB?**
+
+    * Include a version field in documents and implement migration scripts or application logic to handle different schema versions.
+
+21. **What is BSON in MongoDB?**
+
+    * BSON (Binary JSON) is the binary-encoded serialization of JSON-like documents, used by MongoDB for data storage and network transfer.
+
+    Serialization = turning objects into a format for storage/transmission.
+    Binary-encoded serialization means converting a data structure (like a JSON object) into a compact binary format that computers can store or transmit efficiently — and later reconstruct (deserialize) exactly
+
+22. **How do you update documents in MongoDB?**
+
+    * Use updateOne(), updateMany(), or replaceOne() methods with appropriate filters and update operations.
+
+23. **What is the default port for MongoDB, and how can it be changed?**
+
+    * The default port is 27017; it can be changed by specifying a different port in the configuration file or command-line options.
+
+24. **How do you drop a collection in MongoDB?**
+
+    * Use the drop() method on the collection: db.collectionName.drop().
+
+25. **What is the difference between update() and save() methods in MongoDB?**
+
+    * update() modifies specific fields of existing documents; save() replaces the entire document or inserts it if it doesn't exist.
+26. What is the difference between updateOne() and replaceOne() in MongoDB?
+
+ * updateOne() modifies specific fields using operators like $set.
+ * replaceOne() replaces the entire document, keeping only _id.
+
+   db.users.updateOne({ _id: 1 }, { $set: { age: 25 } })
+
+   db.users.replaceOne({ _id: 1 }, { name: "Alex", age: 25 })
+
+27. **Explain the role of journaling in MongoDB. How does it help in ensuring durability?**
+
+   Journaling is a feature of MongoDB (with WiredTiger) that ensures **durability** by writing changes to a journal file **before** applying them to the database files.
+
+   * In case of a crash, MongoDB uses the journal to **recover to the last consistent state**.
+   * It prevents data loss and corruption by replaying operations that were not yet committed to the main data files.
+   * Journaling is enabled by default and is essential for write safety in MongoDB.
+---
