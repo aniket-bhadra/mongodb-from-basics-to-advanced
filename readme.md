@@ -198,7 +198,7 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
 
 2. Then start MongoDB with auth:
 
-   ```
+   ```js
    mongod --auth
    ```
 
@@ -309,15 +309,16 @@ db.dropDatabase()
 
 ### insert data
 if students collection exist it will add data there, if not then it will create and add data
-
+```shell
 db.students.insertOne({name: "Raju", age:25})
 
 db.students.insertMany([
-  {name: "sara", age:25}
-  {name: "subir", age:45}
-  {name: "pravin", age:55}
+  {name: "sara", age:25},
+  {name: "subir", age:45},
+  {name: "pravin", age:55},
   {name: "basu", age:25}
 ])
+```
 
 ### read data
 db.students.find()
@@ -1262,6 +1263,8 @@ needed to prevent inserting non sense, useless data
 
 ### we can create validation while creating collection
 db.createCollection("user2", {
+  validationLevel: "strict",       
+  validationAction: "error",       
   validator: {
     $jsonSchema: {
       bsonType: "object",
@@ -1272,8 +1275,6 @@ db.createCollection("user2", {
           description: "name should be string",
         },
       },
-      validationLevel: "strict",
-      validationAction: "error",
     },
   },
 });
