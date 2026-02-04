@@ -1,4 +1,113 @@
-# ✅ MySQL, PostgreSQL, MongoDB – Local vs Cloud Deployment & GUI/CLI Access
+# MongoDB Complete Guide
+
+## Table of Contents
+
+1. [MySQL, PostgreSQL, MongoDB – Local vs Cloud Deployment & GUI/CLI Access](#mysql-postgresql-mongodb--local-vs-cloud-deployment--guicli-access)
+   - [Local Deployment](#-local-deployment)
+   - [Cloud Deployment](#-cloud-deployment)
+   - [GUI Tools – How They Work](#-gui-tools--how-they-work)
+   - [CLI Tools – Local and Cloud Access](#-cli-tools--local-and-cloud-access)
+   - [Summary](#-summary)
+   - [Comparison: Cloud Access Experience](#-comparison-cloud-access-experience)
+   - [Final Conclusion](#-final-conclusion)
+2. [MySQL, PostgreSQL & MongoDB CLI Setup](#mysql-postgresql--mongodb-cli-setup)
+   - [MySQL CLI](#-mysql-cli)
+   - [PostgreSQL (psql)](#-postgresql-psql)
+   - [MongoDB CLI (mongosh)](#-mongodb-cli-mongosh)
+3. [Connect to MongoDB](#connect-to-mongodb)
+4. [Default Users & Authentication](#default-users--authentication)
+   - [MySQL/PostgreSQL (local)](#-mysqlpostgresql-local)
+   - [MongoDB (local)](#-mongodb-local)
+   - [To enable authentication in local MongoDB](#to-enable-authentication-in-local-mongodb)
+5. [Connection Strings Based on MongoDB Local Setup](#connection-strings-based-on-mongodb-local-setup)
+6. [Two Common Execution Scenarios](#two-common-execution-scenarios)
+   - [Scenario 1: Executing a Single Command](#scenario-1-executing-a-single-command)
+   - [Scenario 2: Executing an Entire File](#scenario-2-executing-an-entire-file)
+   - [Common Misconception](#common-misconception)
+7. [Basic MongoDB Operations](#basic-mongodb-operations)
+   - [show databases](#show-databases)
+   - [create database & use it](#create-database--use-it)
+   - [create collection](#create-collection)
+   - [delete collection](#delete-collection)
+   - [delete db](#delete-db)
+   - [insert data](#insert-data)
+   - [read data](#read-data)
+   - [update data](#update-data)
+   - [upsert](#upsert)
+   - [delete](#delete)
+8. [Data Types](#data-types)
+9. [Operators](#operators)
+   - [Element Operators](#element-operators)
+   - [$exist](#exist)
+   - [$type](#type)
+10. [Array Operators in MongoDB](#array-operators-in-mongodb)
+    - [For arrays of primitives](#-for-arrays-of-primitives-eg-liked-user1-user2)
+    - [For arrays of objects](#-for-arrays-of-objects-eg-liked--user-user1-time-10-)
+    - [Why omitting $elemMatch doesn't work](#-why-omitting-elemmatch-doesnt-work)
+11. [Cursor Methods](#cursor-methods)
+12. [Aggregate Framework](#aggregate-framework)
+    - [$group](#group)
+    - [$match](#match)
+    - [Use find()](#-use-find)
+    - [Use aggregate()](#-use-aggregate)
+    - [Key Rule](#-key-rule)
+    - [Example find() can't do](#-example-find-cant-do)
+    - [$count](#count)
+    - [Case 1: Group by a field](#-case-1-group-by-a-field)
+    - [Case 2: Group all documents together](#-case-2-group-all-documents-together)
+    - [$sum, $avg, etc.](#-2-sum-avg-etc)
+    - [$project](#project)
+    - [$sort](#sort)
+    - [$sortByCount](#sortbycount)
+    - [$unwind](#unwind)
+    - [so what is pipeline then?](#so-what-is-pipeline-then)
+13. [String Operators](#string-operators)
+    - [$concat](#concat)
+    - [toUpper](#toupper)
+    - [$regexMatch](#regexmatch)
+14. [$out](#out)
+15. [Arithmetic Operators](#arithmetic-operators)
+    - [$add](#add)
+16. [addFields/set](#addfieldsset)
+17. [Conditional Operators](#conditional-operators)
+    - [$cond](#cond)
+    - [$switch](#switch)
+18. [$setWindowFields](#setwindowfields)
+    - [What is $setWindowFields?](#-what-is-setwindowfields)
+    - [Syntax](#-syntax)
+    - [Function types](#-function-types)
+    - [Common window.documents ranges](#-common-windowdocuments-ranges)
+19. [Variables](#variables)
+    - [system variables](#system-variables)
+    - [User-Defined Variables in MongoDB Aggregation](#-user-defined-variables-in-mongodb-aggregation)
+    - [Local Variables ($let)](#-1-local-variables-let)
+    - [Persistent Variables Across Stages](#-2-persistent-variables-across-stages)
+20. [Data Modeling](#data-modeling)
+    - [Normalization](#normalization)
+    - [Embedded Document Example](#embedded-document-example)
+    - [Referenced Document Example](#referenced-document-example)
+    - [When to Use What](#when-to-use-what)
+21. [$lookup](#lookup)
+22. [Schema Validation](#schema-validation)
+    - [Creating validation while creating collection](#creating-validation-while-creating-collection)
+    - [Update existing collection to add validation](#update-existing-collection-to-add-validation)
+23. [Index](#index)
+24. [Transaction](#transaction)
+25. [Replication](#replication)
+26. [Sharding – The Basics](#sharding--the-basics)
+    - [Key Components in Sharding](#-key-components-in-sharding)
+    - [Answers to Your Questions](#-answers-to-your-questions)
+    - [Visualization (Simplified)](#-visualization-simplified)
+    - [sharding proper example](#sharding-proper-example)
+27. [why horizontal scaling is harder in sql compare to no sql?](#why-horizontal-scaling-is-harder-in-sql-compare-to-no-sql)
+28. [SQL vs NoSQL: Differences, Pros & Cons, and When to Use](#sql-vs-nosql-differences-pros--cons-and-when-to-use)
+    - [NoSQL](#nosql)
+    - [SQL](#sql)
+29. [MongoDB Interview Questions & Answers](#mongodb-interview-questions--answers)
+
+---
+
+# MySQL, PostgreSQL, MongoDB – Local vs Cloud Deployment & GUI/CLI Access
 
 ### 🔹 All three — MySQL, PostgreSQL, and MongoDB — are **server-based DBMSs**.
 
@@ -126,6 +235,7 @@ Same as GUI tools, CLI tools like `psql`, `mysql`, and `mongosh` can connect to:
 - **MongoDB Atlas + Compass** = simple, fast, beginner-friendly
 - **MySQL/PostgreSQL on cloud + Workbench/pgAdmin** = more manual setup, but fully supported
 
+# MySQL, PostgreSQL & MongoDB CLI Setup
 
 #### ✅ **MySQL CLI:**
 
@@ -157,7 +267,7 @@ Same as GUI tools, CLI tools like `psql`, `mysql`, and `mongosh` can connect to:
 
 ---
 
-### 🔗 Connect to MongoDB:
+# Connect to MongoDB
 
 **Local server:**
 
@@ -170,6 +280,8 @@ mongosh
 ```bash
 mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
 ```
+
+# Default Users & Authentication
 
 ### ✅ **MySQL/PostgreSQL (local):**
 
@@ -203,6 +315,8 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
    ```
 
 ---
+
+# Connection Strings Based on MongoDB Local Setup
 
 ### ✅ **Connection strings based on MongoDB local setup**
 
@@ -265,16 +379,15 @@ Local MongoDB server → mongodb://
 
 ---
 
+# Two Common Execution Scenarios
 
-### Two Common Execution Scenarios
-
-#### Scenario 1: Executing a Single Command
+### Scenario 1: Executing a Single Command
 When you highlight and execute a specific command within a file:
 - **Only the highlighted command is sent directly to the server**
 - No file execution occurs in any meaningful sense
 - The tool simply reads your selection and sends it
 
-#### Scenario 2: Executing an Entire File
+### Scenario 2: Executing an Entire File
 When you run all commands in a file:
 - Commands are sent to the server sequentially, one after another
 - The file isn't "executed" as a program
@@ -282,11 +395,12 @@ When you run all commands in a file:
 
 Database commands run in two ways: Direct Command Path (typed in CLI/GUI → sent instantly to server) and File-Based Path (.sql for PostgreSQL/MySQL, .js for MongoDB → read by tools → sent line by line). Direct is best for quick queries; file-based is ideal for complex or reusable logic. Both methods work across CLI and GUI in all three databases.
 
-When using files, the file itself isn’t executed — it’s just a container of commands. The CLI/GUI tool reads the file and sends commands one by one to the server. If you highlight and run a single command, only that specific command is sent and executed.
+When using files, the file itself isn't executed — it's just a container of commands. The CLI/GUI tool reads the file and sends commands one by one to the server. If you highlight and run a single command, only that specific command is sent and executed.
 
 ### Common Misconception
 When people say "execute the file," what's actually happening is the interface is reading and sending each command to the server sequentially. The database server receives and processes individual commands, not the file as a whole.
 
+# Basic MongoDB Operations
 
 ### show databases
 show dbs
@@ -391,7 +505,8 @@ delete all matched document
 db.cars.deleteMany({})
 delete all documents
 
-### data types
+# Data Types
+
 mongoDB stores data in BSON (binary json) format
 BSON includes all json data types & add more
 
@@ -402,7 +517,8 @@ date,timeStamp,null
 -timeStamp
 db.test.insertOne({ Time: new Timestamp() } )
 
-### operators
+# Operators
+
 $eq $lt $gt $lte $gte $ne
 
 gives equal
@@ -430,8 +546,7 @@ db.cars.find(
 same way use--
 $or, $nor,
 
-## element operators
-#exists, $type
+## Element Operators
 
 ### $exist
 db.cars.find( { color: { $exists: true } } )
@@ -443,8 +558,7 @@ Here we can filter the content based on type like string, bool etc
 This can be useful to find field with null values
 db.cars.find( { model: { $type: "string" } })
 
-
-### 🔁 Array Operators in MongoDB
+# Array Operators in MongoDB
 
 #### ✅ For arrays of **primitives** (e.g., `liked: ["user1", "user2"]`):
 
@@ -525,7 +639,8 @@ db.posts.find({
 
 ---
 
-### cursor methods
+# Cursor Methods
+
 Count
 find().count()
 Sort
@@ -535,12 +650,13 @@ find().limit(2)
 Skip
 find().skip(3)
 
-### Aggregate Framework
-  Most commonly used stages in MongoDB aggregation:
+# Aggregate Framework
+
+Most commonly used stages in MongoDB aggregation:
 
 $match $count $group $project $sort $limit $skip $unwind $lookup $addFields  
 
-$group
+### $group
 find no of cars of each brand
 db.cars.aggregate([
    {
@@ -569,7 +685,7 @@ db.collection.aggregate([
 $push = collects all values in array (with duplicates),
 $addToSet = collects only unique values in array.
 
-$match
+### $match
 Hyundai cars having engine of more than 1000cc
 
 
@@ -618,7 +734,7 @@ But if you need to perform further operations (like $group, $sort, etc.) after m
 
 ---
 
-### ❌ Example `find()` can’t do:
+### ❌ Example `find()` can't do:
 
 ```js
 // Get count of users by city where age > 25
@@ -634,7 +750,7 @@ Only `aggregate()` can handle this kind of logic.
 ---
 
 
-$count
+### $count
 
 count hyundai all cars
 db.cars.aggregate(
@@ -740,7 +856,7 @@ Example:
 
 ---
 
-$project
+### $project
 find all the hyundai cars and only show maker,model and fuel_types
 
 db.cars.aggregate([
@@ -756,7 +872,8 @@ db.cars.aggregate([
       }
    }
 ])
-$sort
+
+### $sort
 
 db.cars.aggregate([
    {
@@ -775,7 +892,7 @@ db.cars.aggregate([
    }
 ])
 
-$sortByCount
+### $sortByCount
 
 db.cars.aggregate([
    {
@@ -784,7 +901,7 @@ db.cars.aggregate([
 ])
 this create groups based on this 'maker' field, then provide the count in each group, then sort based on that 'maker' field
 
-$unwind
+### $unwind
 it is used- suppose if we have array of owner objects in single document
 so i want split the same document for each owner
 db.cars.aggregate([ { $unwind: "$owners" }])
@@ -792,10 +909,11 @@ db.cars.aggregate([ { $unwind: "$owners" }])
 ### so what is pipeline then?
 A pipeline is a sequence of stages that process documents step by step.
 Each stage ($match, $group, etc.) transforms the data and passes it to the next.
-It’s like a data flow — documents go through filters, grouping, sorting, or reshaping in order.
+It's like a data flow — documents go through filters, grouping, sorting, or reshaping in order.
 
-### string operators
-## $concat
+# String Operators
+
+### $concat
 print all the cars--model+maker name
 
 
@@ -812,7 +930,7 @@ db.cars.aggregate([
    }
 ])
 
-## toUpper
+### toUpper
 db.cars.aggregate([
    {
       $match:{
@@ -829,7 +947,7 @@ db.cars.aggregate([
    }
 ])
 
-## $regexMatch
+### $regexMatch
 syntax-{
   $regexMatch:{
       input:which field we want to check,
@@ -884,7 +1002,7 @@ db.cars.aggregate([
    }
 ])
 
-$out
+# $out
 after aggregating store the result in another collection
 db.cars.aggregate([
    {
@@ -898,9 +1016,10 @@ db.cars.aggregate([
 ])
 then we can operate on that new collection this just like view in sql
 
-### Airthmetic Operators
+# Arithmetic Operators
 
 #### $add   $subtract  $divide  $multiply  $round $abs   $ceil
+
 ### $add
 
 db.cars.aggregate([
@@ -932,7 +1051,7 @@ db.cars.aggregate([
 notes:
 find or aggregate the end results always comes as an array
 
-## addFields/set
+# addFields/set
 
 > * To add temporary fields, use either `$project` or `$addFields`.
 > * Fields added in `$project` can be used **only in the immediate next stage**.
@@ -958,7 +1077,8 @@ db.cars.aggregate([
    }
 ])
 
-## Conditional Operators
+# Conditional Operators
+
 $cond   $ifNull   $switch
 
 ### $cond
@@ -983,7 +1103,7 @@ db.cars.aggregate([
 ])
 
 
-$switch
+### $switch
 db.cars.aggregate([
   {
     $project: {
@@ -1002,6 +1122,8 @@ db.cars.aggregate([
   }
 ])
 
+
+# $setWindowFields
 
 ### 🧠 What is `$setWindowFields`?
 
@@ -1061,8 +1183,9 @@ Functions like `$sum`, `$avg`, `$shift`, etc. need:
 
 ---
 
-### variables
-#### system variables
+# Variables
+
+### system variables
 NOW
 stores current system date
 
@@ -1150,7 +1273,9 @@ Object.keys(this)
 It shows all functions and global variables in the current database context,
 
 --- 
-### data modeling
+
+# Data Modeling
+
 MongoDB is a NoSQL database, so it doesn't enforce strict schema relationships like foreign keys in relational databases.
 But we can still connect data between documents.
 
@@ -1158,7 +1283,7 @@ There are two main ways to connect data in MongoDB:
 Embedded Documents (Denormalization)
 Referenced Documents (Normalization)
 
-## Normalization
+### Normalization
 Normalization is the process of storing data in its corresponding table or collection to prevent duplication and redundancy and to better manage the data. It involves breaking down data into smaller, logical parts and putting them into their own proper place. In SQL, you store related data in separate tables and link them using foreign keys. In NoSQL, you store related data in separate collections and reference them with IDs from other collections. This way, you keep data clean, reduce repetition, and make updates easier and safer.
 ex-
  storing customer data in its own "customer" table/collection and order data in its own "order" table/collection. These two are then linked by referencing the customer's primary key (PK) in the order table (SQL) or the customer ID in the order collection (NoSQL).
@@ -1170,7 +1295,7 @@ let say users and orders
 
 
 
-### **1. Embedded Document Example**
+### Embedded Document Example
 
 ```json
 {
@@ -1194,7 +1319,7 @@ let say users and orders
 
 ---
 
-### **2. Referenced Document Example**
+### Referenced Document Example
 
 **User document**:
 
@@ -1230,7 +1355,7 @@ let say users and orders
 
 ---
 
-### **When to Use What**
+### When to Use What
 
 * **Use Embedded Documents**:
 
@@ -1246,7 +1371,8 @@ let say users and orders
 
 ---
 
-### $lookup
+# $lookup
+
 db.users.aggregate([
     {
         "$lookup": {
@@ -1258,10 +1384,11 @@ db.users.aggregate([
     }
 ])
 
-### schema validation
+# Schema Validation
+
 needed to prevent inserting non sense, useless data
 
-### we can create validation while creating collection
+### Creating validation while creating collection
 db.createCollection("user2", {
   validationLevel: "strict",       
   validationAction: "error",       
@@ -1279,12 +1406,12 @@ db.createCollection("user2", {
   },
 });
 // validationLevel: "strict"-->document must fully match the schema validation rules, if it does not then it wont be inserted/updated in the collection
-// validationLevel: "moderate"-->MongoDB checks new documents and only the fields you change during updates.It ignores old invalid data if you don’t touch it.
+// validationLevel: "moderate"-->MongoDB checks new documents and only the fields you change during updates.It ignores old invalid data if you don't touch it.
 
 //validationAction: error->If a document does not meet the schema validation criteria, MongoDB will throw an error and reject the insert or update operation.
 //validationAction: warn--> MongoDB logs a warning message when a document does not meet the schema validation criteria but still allows the insert or update operation.
 
-### update the existing collection to add validation
+### Update existing collection to add validation
 db.runCommand({
    collMod: "users",
    validator: {
@@ -1294,7 +1421,8 @@ db.runCommand({
    }
 })
 
-### index
+# Index
+
 An index is a data structure that improves query speed by allowing the database to quickly locate and access the required data without scanning every document or row in the collection or table.
 
 1. **MongoDB**, **PostgreSQL**, and **MySQL (InnoDB)** all use **B-tree (or B+ tree)** as the default indexing data structure.
@@ -1317,14 +1445,15 @@ Compound Index: Involves multiple fields.
 Unique Index: Index that ensures no two documents have the same value for the indexed field.
 TTL Index: TTL (Time to Live) indexes that are used to automatically remove documents after a certain period.TTL index removes the document, not the index
 
-### Transaction
+# Transaction
+
 A **MongoDB transaction** is a sequence of operations executed as a single unit, ensuring all succeed or all rollback, maintaining **ACID** properties.
 
 **ACID Explained (Short):**
 
 * **Atomicity: All or nothing.** ensures that a transaction is atomic, it means that either the entire transaction completes fully or doesn't execute at all,If a transaction has multiple operations, and one of them fails, the whole transaction is rolled back, leaving the database unchanged. This avoids partial updates
 * **Consistency: Valid state before & after.**Consistency makes sure the database follows all rules before and after a transaction. If a transaction breaks any rule, it's rejected to keep the data correct.
-* **Isolation: No interference between transactions.**Isolation means many transactions can run at the same time, but they don’t affect each other. One transaction’s changes stay invisible to others until it's finished—this avoids reading uncommitted or changing data.
+* **Isolation: No interference between transactions.**Isolation means many transactions can run at the same time, but they don't affect each other. One transaction's changes stay invisible to others until it's finished—this avoids reading uncommitted or changing data.
 * **Durability: Once committed, changes persist.** the updates and modifications to the database are stored in and written to disk.
 
 
@@ -1347,7 +1476,7 @@ ACID principles exist in SQL databases too.
 SQL uses Transaction Control Language (TCL) commands like START TRANSACTION, COMMIT, and ROLLBACK to manage transactions that follow ACID—same concept as in MongoDB.
 
 
-### 🔁 Replication –
+# Replication
 
 * A **replica set** = 1 **primary** + 1+ **secondary** nodes.
 * All **writes** go to the **primary**.
@@ -1364,9 +1493,9 @@ Reads can be scaled — you can configure read preferences to allow reads from s
 
 ---
 
-### ⚖️ Sharding – The Basics
+# Sharding – The Basics
 
-* For **huge datasets** or **high write load**, a single replica set isn’t enough.
+* For **huge datasets** or **high write load**, a single replica set isn't enough.
 * **Sharding** splits data across multiple **shards** = **horizontal scaling**.
 *  Each shard is a **replica set**, so every shard has its own primary + secondaries.
 
@@ -1384,7 +1513,7 @@ Reads can be scaled — you can configure read preferences to allow reads from s
 
 
 **Q1: If I have 1M documents and sharding splits 0.5M per shard, do I need to tell MongoDB which shard to use during queries?**
-❌ No. You **don’t need to know** where the data is.
+❌ No. You **don't need to know** where the data is.
 ✅ `mongos` + **shard key** handle this automatically.But You must design your **shard key carefully** – it affects performance.
 
 
@@ -1404,6 +1533,7 @@ mongos router asks config servers and directs your query to the correct shard(s)
 Total: 6 servers for data + config servers to manage metadata.
 
 config servers are deployed as a replica set (normally with 3 members) for high availability of the metadata, not as a single server. Also, you'll typically have multiple mongos router instances for load balancing and redundancy.
+
 ### 🧠 Visualization (Simplified)
 
 ```
@@ -1414,7 +1544,7 @@ Shard 2 = replica set → [Primary, Secondary, Secondary]
 ```
 
 
-#### sharding proper example
+### sharding proper example
 In NoSQL, we use horizontal scaling via sharding, where a shard key (a field like userId) is used to split data across servers. Since NoSQL is schema-flexible and avoids joins, it's easy to partition collections like orders by userId.
 
 In NoSQL, we do horizontal scaling with sharding. For example, suppose we have `users` and `orders` collections and 1M data. To shard, we can use `userId` as shard key and divide the `orders` collection into 3 shards like:
@@ -1432,7 +1562,7 @@ So to keep `$lookup` fast, you should either:
 
 ---
 
-### why horizontal scaling is harder in sql compare to no sql?
+# why horizontal scaling is harder in sql compare to no sql?
 
 The reason **horizontal scaling is difficult in SQL** is because:
 
@@ -1442,14 +1572,14 @@ The reason **horizontal scaling is difficult in SQL** is because:
 
 But in **NoSQL (like MongoDB):**
 
-* It doesn’t strictly follow schema rules or constraints.
-* After `$lookup` (join), it **doesn’t enforce ACID strictly**.
+* It doesn't strictly follow schema rules or constraints.
+* After `$lookup` (join), it **doesn't enforce ACID strictly**.
 * **ACID is optional** — only applied **when you explicitly use a transaction**.
 * This flexibility makes **horizontal scaling easier and more practical**.
 
-### SQL vs NoSQL: Differences, Pros & Cons, and When to Use
+# SQL vs NoSQL: Differences, Pros & Cons, and When to Use
 
-#### **NoSQL**
+### **NoSQL**
 
 * **Scalability**: Designed to scale horizontally by adding more servers.
 * **Flexibility**: Schema-less design allows easy handling of large, diverse, and semi/unstructured datasets—ideal for real-time analytics.
@@ -1457,7 +1587,7 @@ But in **NoSQL (like MongoDB):**
 .
 * **Use Case**: Best for big data, dynamic schemas, real-time analytics, IoT, and applications requiring rapid scaling.
 
-#### **SQL**
+### **SQL**
 
 * **Scalability**: Scales vertically by adding more resources to a single server (limited, costly, complex).
 * **Flexibility**: Rigid schema—changes require altering the schema, which is complex and time-consuming.
@@ -1465,7 +1595,7 @@ But in **NoSQL (like MongoDB):**
 * **Performance**: SQL writes are slower due to strict schema and ACID compliance; reads are efficient for complex queries using joins, indexes, and structured relationships.
 * **Use Case**: Best for transactional systems (e.g., banking, ERP), where data integrity and complex querying are critical.
 
-### **MongoDB Interview Questions & Answers**
+# MongoDB Interview Questions & Answers
 
 1. **What is MongoDB, and how does it differ from relational databases?**
 
