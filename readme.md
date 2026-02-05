@@ -298,7 +298,7 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
 
 1. Create an admin user:
 
-   ```js
+   ```javascript
    use admin
    db.createUser({
      user: "admin",
@@ -310,7 +310,7 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
 
 2. Then start MongoDB with auth:
 
-   ```js
+   ```bash
    mongod --auth
    ```
 
@@ -322,19 +322,19 @@ mongosh "mongodb://<username>:<password>@<host>:<port>/<dbname>"
 
 1. **If authentication is enabled, and user is created in the `admin` DB**:
 
-```js
+```javascript
 mongoose.connect('mongodb://admin:password@127.0.0.1:27017/dbname?authSource=admin');
 ```
 
 2. **If authentication is enabled, and user is created in the same `dbname`**:
 
-```js
+```javascript
 mongoose.connect('mongodb://username:password@127.0.0.1:27017/dbname');
 ```
 
 3. **If authentication is disabled (default MongoDB install):**
 
-```js
+```javascript
 mongoose.connect('mongodb://127.0.0.1:27017/dbname');
 ```
 
@@ -366,13 +366,19 @@ Create user in a specific DB if they only need access to that one database.
 If user is created in admin DB, then you must add authSource=admin in the connection string.
 
 No authSource needed, since the user is created in the same DB (cricket).
+
+```javascript
 use cricket
 db.createUser({
   user: "rohit",
   pwd: "password",
   roles: [{ role: "readWrite", db: "cricket" }]
 })
+```
+
+```bash
 mongosh "mongodb://rohit:password@127.0.0.1:27017/cricket"
+```
 
 MongoDB Atlas (cloud) → mongodb+srv://
 Local MongoDB server → mongodb://
@@ -403,27 +409,45 @@ When people say "execute the file," what's actually happening is the interface i
 # Basic MongoDB Operations
 
 ### show databases
-show dbs
 
+```javascript
+show dbs
+```
+
+```javascript
 show collections
+```
 
 ### create database & use it
+
+```javascript
 use school
+```
 
 until collection is created no db going to be created
 
 ### create collection
+
+```javascript
 db.createCollection("employees")
+```
 
 ### delete collection
+
+```javascript
 db.collectionName.drop()
+```
 
 ### delete db
+
+```javascript
 db.dropDatabase()
+```
 
 ### insert data
 if students collection exist it will add data there, if not then it will create and add data
-```shell
+
+```javascript
 db.students.insertOne({name: "Raju", age:25})
 
 db.students.insertMany([
@@ -435,74 +459,124 @@ db.students.insertMany([
 ```
 
 ### read data
-db.students.find()
 
+```javascript
+db.students.find()
+```
+
+```javascript
 db.cars.findOne({model:'Creta'})
+```
+
 the methods you use in MongoDB shell (like find(), insertMany(), findOne()) are similar to those in Mongoose, but Mongoose adds additional features like schema validation, middleware,Population (similar to joins in SQL) and more.
 So MongoDB query syntax is fully supported in Mongoose, but Mongoose adds structure and functionality that makes working with MongoDB more developer-friendly in a Node.js environment.
 
+```javascript
 db.cars.find({},{model:1})
+```
+
 this--{} match all the documents
 then {model:1} means only model field selected, 1-> means true
 
 _id is always shown by default, if we dont want-
+
+```javascript
 db.cars.find({},{model:1,_id:0})
+```
 
 filter documents
+
+```javascript
 db.cars.find({fuel_type:"Petrol"})
+```
 
 filter documents based on a field which is array of strings
+
+```javascript
 db.cars.find({features:"Sunroof"})
+```
 
 filter documents based on nested object field
+
+```javascript
 db.cars.find({"engine.type":"Turbocharged"})
+```
 
 ### update data
-```shell
+
+```javascript
 db.cars.updateOne(
   {model:"Nexon"},
   {$set:{color:"Red"}}
 )
 ```
+
 It will only update the first document with model: "City", and if color field is not there even in that case it will add & put 'Red'
 
-```shell
+```javascript
 db.cars.updateMany( { fuel_type: "Diesel" }, { $set: { alloys: "yes" } } )
 ```
+
 update all documents matching this fuel_type
 
 add a value on array filed
-```shell
+
+```javascript
 db.cars.updateOne( { model:"City", }, { $push:{ features:"Heated seats" }} )
 ```
+
 delete a value on array field
-```shell
+
+```javascript
 db.cars.updateOne( { model:"City", }, { $pull:{ features:"Heated seats" }} )
 ```
+
 $push adds elements to the end of an array,
 $pull removes all elements that match a specified condition.
 
 updating multiple values in array
- db.cars.updateOne( { model:"City" }, { $push:{ features:{ $each:["wireless charging", "voice control"]}}})
 
- remove any field
- db.cars.updateOne( { model: "City" }, { $unset: { color: "" } })
+```javascript
+db.cars.updateOne( { model:"City" }, { $push:{ features:{ $each:["wireless charging", "voice control"]}}})
+```
+
+remove any field
+
+```javascript
+db.cars.updateOne( { model: "City" }, { $unset: { color: "" } })
+```
 
 add field to all documents
+
+```javascript
 db.cars.updateMany( { }, { $set: { color: "Blue" } })
+```
 
 ### upsert
 while updating if document not found it will create new document
+
+```javascript
 db.cars.updateMany( { model: "Venue" }, { $set: { maker: "Hyndui" } },{upsert:true})
+```
 
 ### delete
- db.cars.deleteOne({ fuel_type: "Petrol" })
- delete 1st matched document
 
-  db.cars.deleteMany({ fuel_type: "Petrol" })
+```javascript
+db.cars.deleteOne({ fuel_type: "Petrol" })
+```
+
+delete 1st matched document
+
+```javascript
+db.cars.deleteMany({ fuel_type: "Petrol" })
+```
+
 delete all matched document
 
+```javascript
 db.cars.deleteMany({})
+```
+
 delete all documents
 
 # Data Types
@@ -512,27 +586,43 @@ BSON includes all json data types & add more
 
 objectId,string,integer,double,boolean,array,object/embeded document
 date,timeStamp,null
+
 -date
-> db.test.insertOne({ date: new Date() } )
+```javascript
+db.test.insertOne({ date: new Date() } )
+```
+
 -timeStamp
+```javascript
 db.test.insertOne({ Time: new Timestamp() } )
+```
 
 # Operators
 
 $eq $lt $gt $lte $gte $ne
 
 gives equal
+
+```javascript
 db.cars.find({ "engine.cc": 1493 })
+```
 
 give greater than
+
+```javascript
 db.cars.find({ "engine.cc": { $gt: 1400 } })
+```
 
 $in $nin
 $in is not range, it give me document which exactly matches any of the value of particular filed
+
+```javascript
 db.cars.find({ "engine.cc": {$in:[1498,2179] }})
+```
 
 find a car which has array field, and i want from that array field this values "Diesel and Sunroof and Turbocharged Engine" should be there, all 3
 
+```javascript
 db.cars.find(
 {
    $and:[
@@ -542,6 +632,7 @@ db.cars.find(
    ]
 }
 )
+```
 
 same way use--
 $or, $nor,
@@ -549,14 +640,21 @@ $or, $nor,
 ## Element Operators
 
 ### $exist
+
+```javascript
 db.cars.find( { color: { $exists: true } } )
+```
+
 whichever document has color field, return those
 
 ### $type
 $type
 Here we can filter the content based on type like string, bool etc
 This can be useful to find field with null values
+
+```javascript
 db.cars.find( { model: { $type: "string" } })
+```
 
 # Array Operators in MongoDB
 
@@ -564,21 +662,21 @@ db.cars.find( { model: { $type: "string" } })
 
 * **`$in`** → Any value matches
 
-  ```js
+  ```javascript
   db.posts.find({ liked: { $in: ["user1", "user5"] } })
   // Matches posts where liked includes "user1" OR "user5"
   ```
 
 * **`$all`** → All values must be present
 
-  ```js
+  ```javascript
   db.posts.find({ liked: { $all: ["user1", "user2"] } })
   // Matches posts where liked includes BOTH "user1" AND "user2"
   ```
 
 * **`$size`** → Match exact array length
 
-  ```js
+  ```javascript
   db.posts.find({ liked: { $size: 3 } })
   // Matches posts where liked has exactly 3 elements
   ```
@@ -592,7 +690,7 @@ $all does not work, if the field is not an array
 
 * **`$elemMatch`** → Match multiple conditions **inside the same object**
 
-  ```js
+  ```javascript
   db.posts.find({
     liked: { $elemMatch: { user: "user1", time: { $gt: 5 } } }
   })
@@ -601,7 +699,7 @@ $all does not work, if the field is not an array
 
 * **Find posts where either `user1` OR `user2` exists in liked array**
 
-  ```js
+  ```javascript
   db.posts.find({
     $or: [
       { liked: { $elemMatch: { user: "user1" } } },
@@ -612,7 +710,7 @@ $all does not work, if the field is not an array
 
 * **Find posts where BOTH `user1` AND `user2` are present (in any objects)**
 
-  ```js
+  ```javascript
   db.posts.find({
     $and: [
       { liked: { $elemMatch: { user: "user1" } } },
@@ -625,7 +723,7 @@ $all does not work, if the field is not an array
 
 ### ❌ Why omitting `$elemMatch` doesn't work:
 
-```js
+```javascript
 db.posts.find({
   $or: [
     { liked: { user: "user1" } },
@@ -642,13 +740,25 @@ db.posts.find({
 # Cursor Methods
 
 Count
+```javascript
 find().count()
+```
+
 Sort
-find().sort({"name":1}) -1 is for descending order
+```javascript
+find().sort({"name":1})
+```
+-1 is for descending order
+
 Limit
+```javascript
 find().limit(2)
+```
+
 Skip
+```javascript
 find().skip(3)
+```
 
 # Aggregate Framework
 
@@ -658,6 +768,8 @@ $match $count $group $project $sort $limit $skip $unwind $lookup $addFields
 
 ### $group
 find no of cars of each brand
+
+```javascript
 db.cars.aggregate([
    {
       $group:{
@@ -666,10 +778,12 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 other things we can do after groupping-
-db.collection.aggregate([
 
+```javascript
+db.collection.aggregate([
   {
     $group: {
             _id: "$category",
@@ -682,13 +796,15 @@ db.collection.aggregate([
     }
   }
 ])
+```
+
 $push = collects all values in array (with duplicates),
 $addToSet = collects only unique values in array.
 
 ### $match
 Hyundai cars having engine of more than 1000cc
 
-
+```javascript
 db.cars.aggregate([
   {
     $match:{
@@ -697,6 +813,7 @@ db.cars.aggregate([
     }
   }
 ])
+```
 
 We can achieve this with find(), but the problem is:
 find() supports multiple conditions, but not multiple stages.
@@ -736,7 +853,7 @@ But if you need to perform further operations (like $group, $sort, etc.) after m
 
 ### ❌ Example `find()` can't do:
 
-```js
+```javascript
 // Get count of users by city where age > 25
 db.users.aggregate([
   { $match: { age: { $gt: 25 } } },
@@ -753,6 +870,8 @@ Only `aggregate()` can handle this kind of logic.
 ### $count
 
 count hyundai all cars
+
+```javascript
 db.cars.aggregate(
   [
     {$match:{
@@ -762,9 +881,11 @@ db.cars.aggregate(
       $count:"totalCars"
    }
 ])
-
+```
 
 //count no of diesel & petrol cars of hyundai
+
+```javascript
 db.cars.aggregate([
   {
     $match: {
@@ -778,6 +899,8 @@ db.cars.aggregate([
     },
   },
 ]);
+```
+
 //this shows electric,petrol,diesel cars count but i want only petrol and diesel-
 //After $group: { _id: "$fuel_type" },
 // _id becomes the fuel_type.
@@ -787,6 +910,7 @@ db.cars.aggregate([
 // $match: { _id: "Petrol" }
 // You're matching on the grouped fuel_type.
 
+```javascript
 db.cars.aggregate([
   {
     $match: {
@@ -805,6 +929,7 @@ db.cars.aggregate([
     },
   },
 ]);
+```
 
 see this things can not be achieved with find, that is why for this kind of opertion aggrete shold used not find
 
@@ -818,7 +943,7 @@ group the document and count how many in each group --use -- $sum:1
 
 #### 🔹 Case 1: Group by a field
 
-```js
+```javascript
 { $group: { _id: "$maker", total: { $sum: 1 } } }
 ```
 
@@ -827,7 +952,7 @@ group the document and count how many in each group --use -- $sum:1
 
 #### 🔹 Case 2: Group all documents together
 
-```js
+```javascript
 { $group: { _id: null, total: { $sum: "$price" } } }
 ```
 
@@ -841,14 +966,14 @@ group the document and count how many in each group --use -- $sum:1
 🔹 **Inside `$group`** → Used to calculate **per-group aggregations**
 Example:
 
-```js
+```javascript
 { $group: { _id: "$maker", totalCost: { $sum: "$price" } } }
 ```
 
 🔹 **Outside `$group` (e.g., in `$project`, `$addFields`)** → Used to calculate **within an array field**
 Example:
 
-```js
+```javascript
 { $addFields: { totalCost: { $sum: "$service_history.cost" } } }
 ```
 
@@ -859,6 +984,7 @@ Example:
 ### $project
 find all the hyundai cars and only show maker,model and fuel_types
 
+```javascript
 db.cars.aggregate([
    {
       $match:{maker:"Hyundai"}
@@ -872,9 +998,11 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 ### $sort
 
+```javascript
 db.cars.aggregate([
    {
       $match:{maker:"Hyundai"}
@@ -891,20 +1019,27 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 ### $sortByCount
 
+```javascript
 db.cars.aggregate([
    {
       $sortByCount:"$maker"
    }
 ])
+```
+
 this create groups based on this 'maker' field, then provide the count in each group, then sort based on that 'maker' field
 
 ### $unwind
 it is used- suppose if we have array of owner objects in single document
 so i want split the same document for each owner
+
+```javascript
 db.cars.aggregate([ { $unwind: "$owners" }])
+```
 
 ### so what is pipeline then?
 A pipeline is a sequence of stages that process documents step by step.
@@ -916,7 +1051,7 @@ It's like a data flow — documents go through filters, grouping, sorting, or re
 ### $concat
 print all the cars--model+maker name
 
-
+```javascript
 db.cars.aggregate([
    {
       $match:{
@@ -929,8 +1064,11 @@ db.cars.aggregate([
          }
    }
 ])
+```
 
 ### toUpper
+
+```javascript
 db.cars.aggregate([
    {
       $match:{
@@ -946,18 +1084,24 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 ### $regexMatch
-syntax-{
+syntax-
+
+```javascript
+{
   $regexMatch:{
       input:which field we want to check,
      regex: the pattern that we are checking
       i: the option for matching the pattern
   }
 }
-
+```
 
 Q. add a flag is_diesel=true/false for each car
+
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -974,9 +1118,11 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 now i take this data and add another stage which group based on that flag and count in each group--
 
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1001,9 +1147,12 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 # $out
 after aggregating store the result in another collection
+
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1014,6 +1163,8 @@ db.cars.aggregate([
       $out:"all_models"
    }
 ])
+```
+
 then we can operate on that new collection this just like view in sql
 
 # Arithmetic Operators
@@ -1022,6 +1173,7 @@ then we can operate on that new collection this just like view in sql
 
 ### $add
 
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1031,9 +1183,11 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 print all the cars and their old price and newPrice with the hike of 8000
 
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1047,6 +1201,7 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 notes:
 find or aggregate the end results always comes as an array
@@ -1058,7 +1213,7 @@ find or aggregate the end results always comes as an array
 > * Fields added in `$addFields` can be reused in **deeper stages**.
 >   So if the field needs to be reused later in the pipeline, **use `$addFields`**.
 
-
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1076,6 +1231,7 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 # Conditional Operators
 
@@ -1083,6 +1239,7 @@ $cond   $ifNull   $switch
 
 ### $cond
 
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1101,9 +1258,11 @@ db.cars.aggregate([
       }
    }
 ])
-
+```
 
 ### $switch
+
+```javascript
 db.cars.aggregate([
   {
     $project: {
@@ -1121,7 +1280,7 @@ db.cars.aggregate([
     }
   }
 ])
-
+```
 
 # $setWindowFields
 
@@ -1138,7 +1297,7 @@ A powerful aggregation stage (MongoDB 5.0+) that **does what SQL window function
 
 ### 🛠️ Syntax:
 
-```js
+```javascript
 {
   $setWindowFields: {
     partitionBy: "$<field>",           // (Optional)
@@ -1164,7 +1323,7 @@ A powerful aggregation stage (MongoDB 5.0+) that **does what SQL window function
 
 Functions like `$sum`, `$avg`, `$shift`, etc. need:
 
-```js
+```javascript
 <windowFn>: {
   input: "$<field>",                  // what to apply function on
   window: { documents: [start, end] } // range of documents to use
@@ -1189,6 +1348,7 @@ Functions like `$sum`, `$avg`, `$shift`, etc. need:
 NOW
 stores current system date
 
+```javascript
 db.cars.aggregate([
    {
       $project:{
@@ -1199,6 +1359,7 @@ db.cars.aggregate([
       }
    }
 ])
+```
 
 user defined variables
 These variables allow you to store values and
@@ -1211,7 +1372,7 @@ reuse them within the same pipeline
 * Scope: **Only within the current expression**.
 * Syntax:
 
-  ```js
+  ```javascript
   $let: {
     vars: { x: <expression> },
     in: <expression using $$x>
@@ -1219,7 +1380,7 @@ reuse them within the same pipeline
   ```
 * Example:
 
-  ```js
+  ```javascript
   {
     $project: {
       model: 1,
@@ -1243,7 +1404,7 @@ reuse them within the same pipeline
 
 * Example:
 
-  ```js
+  ```javascript
   {
     $addFields: {
       price_in_lakhs: { $divide: ["$price", 100000] }
@@ -1261,15 +1422,21 @@ reuse them within the same pipeline
 
 ---
 in cli we can create variable and can use it-
+
+```javascript
 my_price=1500000
 db.cars.find({ price: my_price })
+```
 
-
+```javascript
 Hyundai={maker:"Hyundai"}
- db.cars.find(Hyundai)
+db.cars.find(Hyundai)
+```
 
- 
+```javascript
 Object.keys(this)
+```
+
 It shows all functions and global variables in the current database context,
 
 --- 
@@ -1373,6 +1540,7 @@ let say users and orders
 
 # $lookup
 
+```javascript
 db.users.aggregate([
     {
         "$lookup": {
@@ -1383,12 +1551,15 @@ db.users.aggregate([
         }
     }
 ])
+```
 
 # Schema Validation
 
 needed to prevent inserting non sense, useless data
 
 ### Creating validation while creating collection
+
+```javascript
 db.createCollection("user2", {
   validationLevel: "strict",       
   validationAction: "error",       
@@ -1405,6 +1576,8 @@ db.createCollection("user2", {
     },
   },
 });
+```
+
 // validationLevel: "strict"-->document must fully match the schema validation rules, if it does not then it wont be inserted/updated in the collection
 // validationLevel: "moderate"-->MongoDB checks new documents and only the fields you change during updates.It ignores old invalid data if you don't touch it.
 
@@ -1412,6 +1585,8 @@ db.createCollection("user2", {
 //validationAction: warn--> MongoDB logs a warning message when a document does not meet the schema validation criteria but still allows the insert or update operation.
 
 ### Update existing collection to add validation
+
+```javascript
 db.runCommand({
    collMod: "users",
    validator: {
@@ -1420,6 +1595,7 @@ db.runCommand({
       }
    }
 })
+```
 
 # Index
 
@@ -1433,10 +1609,12 @@ Stores the indexed fields in a sorted order, along with pointers to the actual d
 In SQL, the primary key (PK) is automatically indexed.
 In MongoDB, the _id field is also automatically indexed.
 
+```javascript
 db.cars.createIndex({ maker: 1 });
 db.cars.createIndex({ model: 1 }, { unique: true });
 db.cars.dropIndex("maker");
 db.cars.getIndexes()
+```
 
 Types of Indexes:
 
@@ -1459,7 +1637,7 @@ A **MongoDB transaction** is a sequence of operations executed as a single unit,
 
 **Simplest Example (ACID-compliant):**
 
-```js
+```javascript
 const session = await client.startSession();
 session.startTransaction();
 try {
@@ -1676,7 +1854,7 @@ Common stages:
 
 13. **What are TTL indexes, and when are they used?**
 
-    * TTL (Time To Live) indexes automatically delete documents after a specified time, useful for expiring data like sessions or logs.
+    * TTL (Time to Live) indexes automatically delete documents after a specified time, useful for expiring data like sessions or logs.
 
 14. **How can you optimize MongoDB queries?**
 
@@ -1729,7 +1907,11 @@ Common stages:
 
 24. **How do you drop a collection in MongoDB?**
 
-    * Use the drop() method on the collection: db.collectionName.drop().
+    * Use the drop() method on the collection:
+    
+    ```javascript
+    db.collectionName.drop()
+    ```
 
 25. **What is the difference between update() and save() methods in MongoDB?**
 
@@ -1739,9 +1921,13 @@ Common stages:
  * updateOne() modifies specific fields using operators like $set.
  * replaceOne() replaces the entire document, keeping only _id.
 
+   ```javascript
    db.users.updateOne({ _id: 1 }, { $set: { age: 25 } })
+   ```
 
+   ```javascript
    db.users.replaceOne({ _id: 1 }, { name: "Alex", age: 25 })
+   ```
 
 27. **Explain the role of journaling in MongoDB. How does it help in ensuring durability?**
 
